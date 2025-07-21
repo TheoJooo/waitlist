@@ -8,59 +8,192 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+// export default function WaitlistForm() {
+//     const [email, setEmail] = useState('');
+//     const [success, setSuccess] = useState(false);
+//     const [errorMsg, setErrorMsg] = useState('');
+  
+//     const handleSubmit = async (e: React.FormEvent) => {
+//       e.preventDefault();
+//       setErrorMsg('');
+  
+//       const { error } = await supabase.from('waitlist').insert({ email });
+  
+//       if (error) {
+//         if (error.code === '23505') {
+//           setErrorMsg('Cet email est déjà inscrit.');
+//         } else {
+//           setErrorMsg('Une erreur est survenue. Réessaie plus tard.');
+//         }
+//         return;
+//       }
+  
+//       setSuccess(true);
+//       setEmail('');
+//     };
+  
+//     return (
+//       <div className="flex flex-col items-center">
+//         {/* Formulaire */}
+//         {!success && (
+//           <form onSubmit={handleSubmit} className="flex gap-3">
+//             <input
+//               type="email"
+//               value={email}
+//               onChange={(e) => setEmail(e.target.value)}
+//               placeholder="you@example.com"
+//               required
+//               className="w-64 px-4 py-2 border rounded"
+//             />
+//             <button
+//               type="submit"
+//               className="px-4 py-2 font-medium text-white transition bg-indigo-600 rounded hover:bg-indigo-500"
+//             >
+//               S’inscrire
+//             </button>
+//           </form>
+//         )}
+  
+//         {/* Message de succès */}
+//         {success && (
+//           <p className="mt-6 text-lg font-medium text-green-600">
+//             Merci ! Tu es bien ajouté à la liste d’attente ✅
+//           </p>
+//         )}
+  
+//         {/* Modal d’erreur */}
+//         {errorMsg && (
+//           <div
+//             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+//             onClick={(e) => {
+//               // ferme si on clique sur l’overlay, pas sur le contenu
+//               if (e.target === e.currentTarget) setErrorMsg('');
+//             }}
+//           >
+//             <div className="relative w-[90%] max-w-md p-6 text-center bg-white rounded-xl shadow-xl">
+//               {/* bouton croix */}
+//               <button
+//                 aria-label="Fermer"
+//                 onClick={() => setErrorMsg('')}
+//                 className="absolute p-1 text-gray-500 rounded-full top-3 right-3 hover:bg-gray-100"
+//               >
+//                 ×
+//               </button>
+  
+//               <h2 className="mb-4 text-xl font-semibold text-red-600">Oups…</h2>
+//               <p className="mb-6 text-gray-700">{errorMsg}</p>
+//               <button
+//                 onClick={() => setErrorMsg('')}
+//                 className="px-4 py-2 font-medium text-white transition bg-indigo-600 rounded hover:bg-indigo-500"
+//               >
+//                 Fermer
+//               </button>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+//     );
+//   }  
+
+const EMAIL_RGX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function WaitlistForm() {
-  const [email, setEmail] = useState('');
-  const [done, setDone] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setDone(false);
-    setError('');
-
-    const { error } = await supabase.from('waitlist').insert({ email });
-
-    if (error) {
-      if (error.code === '23505') {
-        // Code PostgreSQL pour violation de contrainte UNIQUE
-        setError("Cet email est déjà sur la liste d’attente.");
-      } else {
-        setError("Une erreur est survenue. Réessaye plus tard.");
-        console.error(error);
+    const [email, setEmail] = useState('');
+    const [success, setSuccess] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
+    const [formatErr, setFormatErr] = useState('');
+  
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setErrorMsg('');
+      setFormatErr('');
+  
+      if (!EMAIL_RGX.test(email)) {
+        setFormatErr('Adresse email invalide.');
+        return;
       }
-      return;
-    }
-
-    setDone(true);
-    setEmail('');
-  };
-
-  return (
-    <div className="flex flex-col items-center">
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          required
-          className="px-4 py-2 border rounded"
-        />
-        <button
-          type="submit"
-          className="bg-indigo-600 text-white px-4 py-2 rounded"
-        >
-          S’inscrire
-        </button>
-      </form>
-
-      {done && (
-        <p className="mt-4 text-green-600">Merci ! Tu es bien inscrit(e) ✅</p>
-      )}
-
-      {error && (
-        <p className="mt-4 text-red-600">{error}</p>
-      )}
-    </div>
-  );
-}
+  
+      const { error } = await supabase.from('waitlist').insert({ email });
+  
+      if (error) {
+        if (error.code === '23505') {
+          setErrorMsg('Cet email est déjà inscrit.');
+        } else {
+          setErrorMsg('Une erreur est survenue. Réessaie plus tard.');
+        }
+        return;
+      }
+  
+      setSuccess(true);
+      setEmail('');
+    };
+  
+    return (
+      <div className="flex flex-col items-center">
+        {/* Titre dynamique */}
+        <h1 className="mb-6 text-3xl font-semibold text-center">
+          {success ? 'Merci pour ton inscription !' : 'Rejoins la liste d’attente'}
+        </h1>
+  
+        {/* Formulaire uniquement si pas encore inscrit */}
+        {!success && (
+          <form onSubmit={handleSubmit} className="flex flex-col items-center gap-2">
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className={
+                'w-64 px-4 py-2 border rounded focus:outline-none ' +
+                (formatErr ? 'border-red-500' : 'border-gray-300')
+              }
+            />
+            {/* message d’erreur format */}
+            {formatErr && <p className="text-sm text-red-600">{formatErr}</p>}
+  
+            <button
+              type="submit"
+              className="px-4 py-2 font-medium text-white transition bg-indigo-600 rounded hover:bg-indigo-500"
+            >
+              S’inscrire
+            </button>
+          </form>
+        )}
+  
+        {/* Message de succès */}
+        {success && (
+          <p className="mt-4 text-green-600 text-lg font-medium">
+            Tu recevras un email dès le lancement ✅
+          </p>
+        )}
+  
+        {/* Modal d’erreur (duplicate ou serveur) */}
+        {errorMsg && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setErrorMsg('');
+            }}
+          >
+            <div className="relative w-[90%] max-w-md p-6 text-center bg-white rounded-xl shadow-xl">
+              <button
+                aria-label="Fermer"
+                onClick={() => setErrorMsg('')}
+                className="absolute top-3 right-3 p-1 text-gray-500 rounded-full hover:bg-gray-100"
+              >
+                ×
+              </button>
+              <h2 className="mb-4 text-xl font-semibold text-red-600">Oups…</h2>
+              <p className="mb-6 text-gray-700">{errorMsg}</p>
+              <button
+                onClick={() => setErrorMsg('')}
+                className="px-4 py-2 font-medium text-white transition bg-indigo-600 rounded hover:bg-indigo-500"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+  
