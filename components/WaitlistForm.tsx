@@ -109,7 +109,7 @@ export default function WaitlistForm() {
       setFormatErr('');
   
       if (!EMAIL_RGX.test(email)) {
-        setFormatErr('Adresse email invalide.');
+        setFormatErr('Invalid email address.');
         return;
       }
   
@@ -117,9 +117,9 @@ export default function WaitlistForm() {
   
       if (error) {
         if (error.code === '23505') {
-          setErrorMsg('Cet email est déjà inscrit.');
+          setErrorMsg('This email is already registered.');
         } else {
-          setErrorMsg('Une erreur est survenue. Réessaie plus tard.');
+          setErrorMsg('An error occurred. Please try again later.');
         }
         return;
       }
@@ -130,43 +130,40 @@ export default function WaitlistForm() {
   
     return (
       <div className="flex flex-col items-center">
-        {/* Titre dynamique */}
+
         <h1 className="mb-6 text-3xl font-semibold text-center">
-          {success ? 'Merci pour ton inscription !' : 'Rejoins la liste d’attente'}
+          {success ? 'Thank you for signing up!' : 'Join the waiting list'}
         </h1>
   
-        {/* Formulaire uniquement si pas encore inscrit */}
         {!success && (
           <form onSubmit={handleSubmit} className="flex flex-col items-center gap-2">
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder="various@example.com"
               className={
                 'w-64 px-4 py-2 border rounded focus:outline-none ' +
                 (formatErr ? 'border-red-500' : 'border-gray-300')
               }
             />
-            {/* message d’erreur format */}
+
             {formatErr && <p className="text-sm text-red-600">{formatErr}</p>}
   
             <button
               type="submit"
               className="px-4 py-2 font-medium text-white transition bg-indigo-600 rounded hover:bg-indigo-500"
             >
-              S’inscrire
+              Sign up.
             </button>
           </form>
         )}
   
-        {/* Message de succès */}
         {success && (
           <p className="mt-4 text-green-600 text-lg font-medium">
-            Tu recevras un email dès le lancement ✅
+            You’ll receive an email at launch ✅
           </p>
         )}
   
-        {/* Modal d’erreur (duplicate ou serveur) */}
         {errorMsg && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
@@ -176,7 +173,7 @@ export default function WaitlistForm() {
           >
             <div className="relative w-[90%] max-w-md p-6 text-center bg-white rounded-xl shadow-xl">
               <button
-                aria-label="Fermer"
+                aria-label="Close"
                 onClick={() => setErrorMsg('')}
                 className="absolute top-3 right-3 p-1 text-gray-500 rounded-full hover:bg-gray-100"
               >
@@ -188,7 +185,7 @@ export default function WaitlistForm() {
                 onClick={() => setErrorMsg('')}
                 className="px-4 py-2 font-medium text-white transition bg-indigo-600 rounded hover:bg-indigo-500"
               >
-                Fermer
+                Close
               </button>
             </div>
           </div>
