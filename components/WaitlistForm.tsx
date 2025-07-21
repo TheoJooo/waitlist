@@ -147,11 +147,11 @@ export default function WaitlistForm() {
               }
             />
 
-            {formatErr && <p className="text-sm text-red-600">{formatErr}</p>}
+            {formatErr && <p className="text-sm text-red-300">{formatErr}</p>}
   
             <button
               type="submit"
-              className="px-4 py-2 font-medium text-white transition bg-indigo-600 rounded hover:bg-indigo-500"
+              className="px-4 py-2 font-medium text-black transition bg-white rounded hover:bg-lime-50"
             >
               Sign up.
             </button>
@@ -159,7 +159,7 @@ export default function WaitlistForm() {
         )}
   
         {success && (
-          <p className="mt-4 text-green-600 text-lg font-medium">
+          <p className="mt-4 text-green-300 text-lg font-medium">
             You’ll receive an email at launch ✅
           </p>
         )}
@@ -171,19 +171,19 @@ export default function WaitlistForm() {
               if (e.target === e.currentTarget) setErrorMsg('');
             }}
           >
-            <div className="relative w-[90%] max-w-md p-6 text-center bg-white rounded-xl shadow-xl">
+            <div className="relative w-[90%] max-w-md p-6 text-center bg-black rounded-xl shadow-xl">
               <button
                 aria-label="Close"
                 onClick={() => setErrorMsg('')}
-                className="absolute top-3 right-3 p-1 text-gray-500 rounded-full hover:bg-gray-100"
+                className="absolute top-3 right-3 p-2 text-white rounded-full hover:bg-gray-800"
               >
                 ×
               </button>
-              <h2 className="mb-4 text-xl font-semibold text-red-600">Oups…</h2>
-              <p className="mb-6 text-gray-700">{errorMsg}</p>
+              <h2 className="mb-4 text-xl font-semibold text-red-300">Oups…</h2>
+              <p className="mb-6 text-white">{errorMsg}</p>
               <button
                 onClick={() => setErrorMsg('')}
-                className="px-4 py-2 font-medium text-white transition bg-indigo-600 rounded hover:bg-indigo-500"
+                className="px-4 py-2 font-medium text-black transition bg-white rounded hover:bg-lime-50"
               >
                 Close
               </button>
