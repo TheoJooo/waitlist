@@ -131,8 +131,8 @@ export default function WaitlistForm() {
     return (
       <div className="flex flex-col items-center">
 
-        <h1 className="mb-6 text-3xl font-semibold text-center">
-          {success ? 'Thank you for signing up!' : 'Join the waiting list'}
+        <h1 className="mb-6 text-sm text-gray-200 font-semibold text-center">
+          {success ? 'Thank you for signing up.' : 'Private Beta'}
         </h1>
   
         {!success && (
@@ -142,7 +142,7 @@ export default function WaitlistForm() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="various@example.com"
               className={
-                'w-64 px-4 py-2 border rounded focus:outline-none ' +
+                'w-64 px-4 py-2 border text-sm focus:outline-none ' +
                 (formatErr ? 'border-red-500' : 'border-gray-300')
               }
             />
@@ -151,15 +151,15 @@ export default function WaitlistForm() {
   
             <button
               type="submit"
-              className="px-4 py-2 font-medium text-black transition bg-white rounded hover:bg-lime-50"
+              className="w-64 px-4 py-2 font-medium text-sm text-black transition bg-white hover:bg-lime-50"
             >
-              Sign up.
+              Join the waitlist
             </button>
           </form>
         )}
   
         {success && (
-          <p className="mt-4 text-green-300 text-lg font-medium">
+          <p className="mt-4 text-green-300 text-sm font-medium">
             You’ll receive an email at launch ✅
           </p>
         )}
@@ -171,19 +171,19 @@ export default function WaitlistForm() {
               if (e.target === e.currentTarget) setErrorMsg('');
             }}
           >
-            <div className="relative w-[90%] max-w-md p-6 text-center bg-black rounded-xl shadow-xl">
+            <div className="relative w-[90%] max-w-md p-6 text-sm text-center bg-black rounded-xl shadow-xl">
               <button
                 aria-label="Close"
                 onClick={() => setErrorMsg('')}
-                className="absolute top-3 right-3 p-2 text-white rounded-full hover:bg-gray-800"
+                className="absolute top-3 right-3 p-2 text-sm text-white rounded-full hover:bg-gray-800"
               >
                 ×
               </button>
-              <h2 className="mb-4 text-xl font-semibold text-red-300">Oups…</h2>
-              <p className="mb-6 text-white">{errorMsg}</p>
+              <h2 className="mb-4 text-sm font-semibold text-red-300">Oups…</h2>
+              <p className="mb-6 text-sm text-white">{errorMsg}</p>
               <button
                 onClick={() => setErrorMsg('')}
-                className="px-4 py-2 font-medium text-black transition bg-white rounded hover:bg-lime-50"
+                className="px-4 py-2 font-medium text-sm text-black transition bg-white rounded hover:bg-lime-50"
               >
                 Close
               </button>
