@@ -151,7 +151,7 @@ export default function WaitlistForm() {
   
             <button
               type="submit"
-              className="w-64 px-4 py-2 font-medium text-sm text-black transition bg-white hover:bg-lime-50"
+              className="w-64 px-4 py-2 font-bold text-sm text-black transition bg-white hover:bg-lime-50"
             >
               Join the waitlist
             </button>
