@@ -1,196 +1,238 @@
 'use client';
 
-import { createClient } from '@supabase/supabase-js';
-import { useState } from 'react';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-// export default function WaitlistForm() {
-//     const [email, setEmail] = useState('');
-//     const [success, setSuccess] = useState(false);
-//     const [errorMsg, setErrorMsg] = useState('');
-  
-//     const handleSubmit = async (e: React.FormEvent) => {
-//       e.preventDefault();
-//       setErrorMsg('');
-  
-//       const { error } = await supabase.from('waitlist').insert({ email });
-  
-//       if (error) {
-//         if (error.code === '23505') {
-//           setErrorMsg('Cet email est déjà inscrit.');
-//         } else {
-//           setErrorMsg('Une erreur est survenue. Réessaie plus tard.');
-//         }
-//         return;
-//       }
-  
-//       setSuccess(true);
-//       setEmail('');
-//     };
-  
-//     return (
-//       <div className="flex flex-col items-center">
-//         {/* Formulaire */}
-//         {!success && (
-//           <form onSubmit={handleSubmit} className="flex gap-3">
-//             <input
-//               type="email"
-//               value={email}
-//               onChange={(e) => setEmail(e.target.value)}
-//               placeholder="you@example.com"
-//               required
-//               className="w-64 px-4 py-2 border rounded"
-//             />
-//             <button
-//               type="submit"
-//               className="px-4 py-2 font-medium text-white transition bg-indigo-600 rounded hover:bg-indigo-500"
-//             >
-//               S’inscrire
-//             </button>
-//           </form>
-//         )}
-  
-//         {/* Message de succès */}
-//         {success && (
-//           <p className="mt-6 text-lg font-medium text-green-600">
-//             Merci ! Tu es bien ajouté à la liste d’attente ✅
-//           </p>
-//         )}
-  
-//         {/* Modal d’erreur */}
-//         {errorMsg && (
-//           <div
-//             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-//             onClick={(e) => {
-//               // ferme si on clique sur l’overlay, pas sur le contenu
-//               if (e.target === e.currentTarget) setErrorMsg('');
-//             }}
-//           >
-//             <div className="relative w-[90%] max-w-md p-6 text-center bg-white rounded-xl shadow-xl">
-//               {/* bouton croix */}
-//               <button
-//                 aria-label="Fermer"
-//                 onClick={() => setErrorMsg('')}
-//                 className="absolute p-1 text-gray-500 rounded-full top-3 right-3 hover:bg-gray-100"
-//               >
-//                 ×
-//               </button>
-  
-//               <h2 className="mb-4 text-xl font-semibold text-red-600">Oups…</h2>
-//               <p className="mb-6 text-gray-700">{errorMsg}</p>
-//               <button
-//                 onClick={() => setErrorMsg('')}
-//                 className="px-4 py-2 font-medium text-white transition bg-indigo-600 rounded hover:bg-indigo-500"
-//               >
-//                 Fermer
-//               </button>
-//             </div>
-//           </div>
-//         )}
-//       </div>
-//     );
-//   }  
+import { createClient, type PostgrestError } from '@supabase/supabase-js';
+import { useRef, useState } from 'react';
+import { capturePosthogEvent, getUtmFromWindow } from '@/lib/analytics';
 
 const EMAIL_RGX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RGX = /^[\d+\-().\s]{7,20}$/;
 
-export default function WaitlistForm() {
-    const [email, setEmail] = useState('');
-    const [success, setSuccess] = useState(false);
-    const [errorMsg, setErrorMsg] = useState('');
-    const [formatErr, setFormatErr] = useState('');
-  
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setErrorMsg('');
-      setFormatErr('');
-  
-      if (!EMAIL_RGX.test(email)) {
-        setFormatErr('Invalid email address.');
-        return;
-      }
-  
-      const { error } = await supabase.from('waitlist').insert({ email });
-  
-      if (error) {
-        if (error.code === '23505') {
-          setErrorMsg('This email is already registered.');
-        } else {
-          setErrorMsg('An error occurred. Please try again later.');
-        }
-        return;
-      }
-  
-      setSuccess(true);
-      setEmail('');
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase =
+  supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+
+type WaitlistFormProps = {
+  location: 'hero' | 'footer';
+  title?: string;
+};
+
+type FormValues = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+};
+
+const INITIAL_VALUES: FormValues = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+};
+
+function buildErrorMessage(error: PostgrestError | null, fallbackMessage?: string) {
+  if (fallbackMessage) return fallbackMessage;
+  if (!error) return 'An error occurred. Please try again later.';
+  if (error.code === '23505') return 'This email is already registered.';
+  return 'An error occurred. Please try again later.';
+}
+
+function validate(values: FormValues) {
+  if (!values.firstName.trim()) return 'First name is required.';
+  if (!values.lastName.trim()) return 'Last name is required.';
+  if (!EMAIL_RGX.test(values.email.trim())) return 'Please enter a valid email address.';
+  if (!PHONE_RGX.test(values.phone.trim())) return 'Please enter a valid phone number.';
+  return '';
+}
+
+async function insertInWaitlist(payload: Record<string, string>) {
+  if (!supabase) {
+    return {
+      error: null as PostgrestError | null,
+      fallbackMessage:
+        'Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.',
     };
-  
+  }
+
+  const primaryInsert = await supabase.from('waitlist').insert(payload);
+
+  if (!primaryInsert.error) {
+    return { error: null as PostgrestError | null, fallbackMessage: '' };
+  }
+
+  const unknownColumns =
+    primaryInsert.error.code === 'PGRST204' ||
+    /column/i.test(primaryInsert.error.message) ||
+    /schema cache/i.test(primaryInsert.error.message);
+
+  if (!unknownColumns) {
+    return { error: primaryInsert.error, fallbackMessage: '' };
+  }
+
+  const fallbackInsert = await supabase
+    .from('waitlist')
+    .insert({ email: payload.email });
+
+  return { error: fallbackInsert.error, fallbackMessage: '' };
+}
+
+export default function WaitlistForm({ location, title }: WaitlistFormProps) {
+  const [values, setValues] = useState<FormValues>(INITIAL_VALUES);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const hasTrackedStart = useRef(false);
+
+  const trackFormStart = () => {
+    if (hasTrackedStart.current) return;
+    hasTrackedStart.current = true;
+    capturePosthogEvent('waitlist_form_started', {
+      form_location: location,
+      ...getUtmFromWindow(),
+    });
+  };
+
+  const updateField = (field: keyof FormValues, value: string) => {
+    trackFormStart();
+    setValues((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setErrorMsg('');
+    trackFormStart();
+
+    const validationError = validate(values);
+    const utmProperties = getUtmFromWindow();
+
+    if (validationError) {
+      setErrorMsg(validationError);
+      capturePosthogEvent('waitlist_signup_failed', {
+        form_location: location,
+        error_code: 'validation_error',
+        error_message: validationError,
+        ...utmProperties,
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const payload = {
+      first_name: values.firstName.trim(),
+      last_name: values.lastName.trim(),
+      email: values.email.trim().toLowerCase(),
+      phone: values.phone.trim(),
+      form_location: location,
+      ...utmProperties,
+    };
+
+    const { error, fallbackMessage } = await insertInWaitlist(payload);
+
+    if (error || fallbackMessage) {
+      const message = buildErrorMessage(error, fallbackMessage);
+      setErrorMsg(message);
+      capturePosthogEvent('waitlist_signup_failed', {
+        form_location: location,
+        error_code: error?.code ?? (fallbackMessage ? 'missing_env' : 'unknown'),
+        error_message: message,
+        ...utmProperties,
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    setSuccess(true);
+    setValues(INITIAL_VALUES);
+    setIsSubmitting(false);
+
+    capturePosthogEvent('waitlist_signup_submitted', {
+      form_location: location,
+      ...utmProperties,
+    });
+  };
+
+  if (success) {
     return (
-      <div className="flex flex-col items-center">
-
-        <h1 className="mb-6 text-sm text-gray-200 font-semibold text-center">
-          {success ? 'Thank you for signing up.' : 'Private Beta'}
-        </h1>
-  
-        {!success && (
-          <form onSubmit={handleSubmit} className="flex flex-col items-center gap-2">
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="various@example.com"
-              className={
-                'w-64 px-4 py-2 border text-sm focus:outline-none ' +
-                (formatErr ? 'border-red-500' : 'border-gray-300')
-              }
-            />
-
-            {formatErr && <p className="text-sm text-red-300">{formatErr}</p>}
-  
-            <button
-              type="submit"
-              className="w-64 px-4 py-2 font-bold text-sm text-black transition bg-white hover:bg-lime-50"
-            >
-              Join the waitlist
-            </button>
-          </form>
-        )}
-  
-        {success && (
-          <p className="mt-4 text-green-300 text-sm font-medium">
-            You’ll receive an email at launch ✅
-          </p>
-        )}
-  
-        {errorMsg && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setErrorMsg('');
-            }}
-          >
-            <div className="relative w-[90%] max-w-md p-6 text-sm text-center bg-black rounded-xl shadow-xl">
-              <button
-                aria-label="Close"
-                onClick={() => setErrorMsg('')}
-                className="absolute top-3 right-3 p-2 text-sm text-white rounded-full hover:bg-gray-800"
-              >
-                ×
-              </button>
-              <h2 className="mb-4 text-sm font-semibold text-red-300">Oups…</h2>
-              <p className="mb-6 text-sm text-white">{errorMsg}</p>
-              <button
-                onClick={() => setErrorMsg('')}
-                className="px-4 py-2 font-medium text-sm text-black transition bg-white rounded hover:bg-lime-50"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
+      <div className="border border-neutral-300 p-5">
+        <h3 className="text-2xl font-semibold">You&apos;re on the list.</h3>
+        <p className="mt-2 text-sm text-neutral-700">
+          Thanks for joining. Early access invitations are sent in waves before public launch.
+        </p>
       </div>
     );
   }
-  
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      {title ? (
+        <h3 className="text-xl font-semibold">{title}</h3>
+      ) : null}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="space-y-1 text-sm text-neutral-700">
+          <span>First name</span>
+          <input
+            value={values.firstName}
+            onFocus={trackFormStart}
+            onChange={(event) => updateField('firstName', event.target.value)}
+            autoComplete="given-name"
+            required
+            className="h-11 w-full border border-neutral-300 bg-white px-3 text-black outline-none focus:border-black"
+          />
+        </label>
+        <label className="space-y-1 text-sm text-neutral-700">
+          <span>Last name</span>
+          <input
+            value={values.lastName}
+            onFocus={trackFormStart}
+            onChange={(event) => updateField('lastName', event.target.value)}
+            autoComplete="family-name"
+            required
+            className="h-11 w-full border border-neutral-300 bg-white px-3 text-black outline-none focus:border-black"
+          />
+        </label>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="space-y-1 text-sm text-neutral-700">
+          <span>Email address</span>
+          <input
+            type="email"
+            value={values.email}
+            onFocus={trackFormStart}
+            onChange={(event) => updateField('email', event.target.value)}
+            autoComplete="email"
+            required
+            className="h-11 w-full border border-neutral-300 bg-white px-3 text-black outline-none focus:border-black"
+          />
+        </label>
+        <label className="space-y-1 text-sm text-neutral-700">
+          <span>Phone number</span>
+          <input
+            type="tel"
+            value={values.phone}
+            onFocus={trackFormStart}
+            onChange={(event) => updateField('phone', event.target.value)}
+            autoComplete="tel"
+            required
+            className="h-11 w-full border border-neutral-300 bg-white px-3 text-black outline-none focus:border-black"
+          />
+        </label>
+      </div>
+
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="flex h-11 w-full items-center justify-center border border-black bg-black px-4 text-sm font-semibold uppercase tracking-[0.06em] text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-70"
+      >
+        {isSubmitting ? 'Submitting...' : 'Get Early Access'}
+      </button>
+
+      <p className="text-xs text-neutral-600">No spam, ever. Unsubscribe anytime.</p>
+
+      {errorMsg ? <p className="text-sm text-red-700">{errorMsg}</p> : null}
+    </form>
+  );
+}
