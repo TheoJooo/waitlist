@@ -3,6 +3,7 @@
 import { createClient, type PostgrestError } from '@supabase/supabase-js';
 import { useRef, useState } from 'react';
 import { capturePosthogEvent, getUtmFromWindow } from '@/lib/analytics';
+import StarBorder from '@/components/ui/star-border';
 
 const EMAIL_RGX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RGX = /^[\d+\-().\s]{7,20}$/;
@@ -90,6 +91,16 @@ export default function WaitlistForm({ location, title }: WaitlistFormProps) {
   const [success, setSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const hasTrackedStart = useRef(false);
+  const isHero = location === 'hero';
+
+  const labelClassName = isHero ? 'block space-y-1 text-sm text-neutral-200' : 'block space-y-1 text-sm text-neutral-700';
+  const inputClassName = isHero
+    ? 'h-11 w-full rounded-none border border-white/45 bg-white/8 px-3 text-neutral-50 caret-white outline-none transition placeholder:text-neutral-400 focus:border-white focus:bg-white/12'
+    : 'h-11 w-full rounded-none border border-neutral-300 bg-white px-3 text-black outline-none transition focus:border-black';
+  const helperStrongClassName = isHero ? 'text-sm font-semibold text-neutral-100' : 'text-sm font-semibold text-[var(--main-black)]';
+  const helperClassName = isHero ? 'text-xs text-neutral-400' : 'text-xs text-neutral-600';
+  const errorClassName = isHero ? 'text-sm text-red-300' : 'text-sm text-red-700';
+  const buttonEffectColor = isHero ? 'rgba(255, 255, 255, 0.95)' : 'rgba(17, 17, 17, 0.75)';
 
   const trackFormStart = () => {
     if (hasTrackedStart.current) return;
@@ -165,9 +176,9 @@ export default function WaitlistForm({ location, title }: WaitlistFormProps) {
 
   if (success) {
     return (
-      <div className="border border-neutral-300 p-5">
-        <h3 className="text-2xl font-semibold">You&apos;re on the list.</h3>
-        <p className="mt-2 text-sm text-neutral-700">
+      <div className={isHero ? 'border border-white/35 bg-black/45 p-5 text-neutral-100' : 'border border-neutral-300 p-5'}>
+        <h3 className="text-2xl font-semibold text-inherit">You&apos;re on the list.</h3>
+        <p className={isHero ? 'mt-2 text-sm text-neutral-300' : 'mt-2 text-sm text-neutral-700'}>
           Thanks for joining. Early access invitations are sent in waves before public launch.
         </p>
       </div>
@@ -177,11 +188,13 @@ export default function WaitlistForm({ location, title }: WaitlistFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5" noValidate>
       {title ? (
-        <h3 className="text-xl font-semibold tracking-tight">{title}</h3>
+        <h3 className={isHero ? 'text-xl font-semibold tracking-tight text-neutral-100' : 'text-xl font-semibold tracking-tight'}>
+          {title}
+        </h3>
       ) : null}
 
       <div className="space-y-3">
-        <label className="block space-y-1 text-sm text-neutral-700">
+        <label className={labelClassName}>
           <span>Name</span>
           <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
             <input
@@ -190,11 +203,11 @@ export default function WaitlistForm({ location, title }: WaitlistFormProps) {
               onChange={(event) => updateField('fullName', event.target.value)}
               autoComplete="name"
               required
-              className="h-11 w-full rounded-none border border-neutral-300 bg-white px-3 text-black outline-none transition focus:border-black"
+              className={inputClassName}
             />
           </div>
         </label>
-        <label className="block space-y-1 text-sm text-neutral-700">
+        <label className={labelClassName}>
           <span>Email</span>
           <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
             <input
@@ -204,11 +217,11 @@ export default function WaitlistForm({ location, title }: WaitlistFormProps) {
               onChange={(event) => updateField('email', event.target.value)}
               autoComplete="email"
               required
-              className="h-11 w-full rounded-none border border-neutral-300 bg-white px-3 text-black outline-none transition focus:border-black"
+              className={inputClassName}
             />
           </div>
         </label>
-        <label className="block space-y-1 text-sm text-neutral-700">
+        <label className={labelClassName}>
           <span>Phone number</span>
           <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
             <input
@@ -218,23 +231,28 @@ export default function WaitlistForm({ location, title }: WaitlistFormProps) {
               onChange={(event) => updateField('phone', event.target.value)}
               autoComplete="tel"
               required
-              className="h-11 w-full rounded-none border border-neutral-300 bg-white px-3 text-black outline-none transition focus:border-black"
+              className={inputClassName}
             />
           </div>
         </label>
       </div>
 
-      <button
+      <StarBorder
+        as="button"
         type="submit"
         disabled={isSubmitting}
-        className="flex h-11 w-full items-center justify-center rounded-none border border-black bg-black px-4 text-sm font-semibold uppercase tracking-[0.06em] text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-70"
+        className="w-full"
+        color={buttonEffectColor}
+        speed="3.5s"
+        thickness={1.5}
       >
         {isSubmitting ? 'Submitting...' : 'Get Early Access'}
-      </button>
+      </StarBorder>
 
-      <p className="text-xs text-neutral-600">No spam, ever. Unsubscribe anytime.</p>
+      <p className={helperStrongClassName}>First invites go out soon.</p>
+      <p className={helperClassName}>No spam. Unsubscribe anytime.</p>
 
-      {errorMsg ? <p className="text-sm text-red-700">{errorMsg}</p> : null}
+      {errorMsg ? <p className={errorClassName}>{errorMsg}</p> : null}
     </form>
   );
 }

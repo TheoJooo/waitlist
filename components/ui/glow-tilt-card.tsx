@@ -67,7 +67,7 @@ export default function GlowTiltCard({ className, children }: GlowTiltCardProps)
       onMouseLeave={handleMouseLeave}
       style={{ "--mx": "50%", "--my": "50%" } as React.CSSProperties}
       className={cn(
-        "group relative rounded-none border border-[var(--outline)] bg-[rgba(242,242,242,0.92)] backdrop-blur-sm transition-transform duration-300 ease-out will-change-transform",
+        "group relative rounded-none border border-white/20 bg-[rgba(6,6,10,0.66)] backdrop-blur-md transition-transform duration-300 ease-out will-change-transform",
         className,
       )}
     >
@@ -75,38 +75,38 @@ export default function GlowTiltCard({ className, children }: GlowTiltCardProps)
         className="pointer-events-none absolute inset-0 rounded-none opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         style={{
           background:
-            "radial-gradient(320px circle at var(--mx) var(--my), rgba(255,255,255,0.32), rgba(255,255,255,0.08) 36%, transparent 66%)",
+            "radial-gradient(320px circle at var(--mx) var(--my), rgba(255,255,255,0.2), rgba(255,255,255,0.06) 36%, transparent 66%)",
         }}
       />
       <div className="pointer-events-none absolute inset-0 rounded-none overflow-hidden">
         <div className="absolute inset-0 border border-white/25 transition-colors duration-300 group-hover:border-white/70" />
         <span
-          className="absolute top-0 left-[-55%] h-[2px] w-[50%] bg-gradient-to-r from-transparent via-white/95 to-transparent opacity-75 blur-[0.8px]"
-          style={{ animation: "card-beam-top 2.8s ease-in-out infinite" }}
+          className="absolute top-0 left-[-55%] h-[2px] w-[50%] bg-gradient-to-r from-transparent via-white/95 to-transparent opacity-55 blur-[0.8px]"
+          style={{ animation: "card-beam-top 6.4s ease-in-out infinite" }}
         />
         <span
-          className="absolute top-[-55%] right-0 h-[50%] w-[2px] bg-gradient-to-b from-transparent via-white/95 to-transparent opacity-75 blur-[0.8px]"
-          style={{ animation: "card-beam-right 2.8s ease-in-out infinite 0.7s" }}
+          className="absolute top-[-55%] right-0 h-[50%] w-[2px] bg-gradient-to-b from-transparent via-white/95 to-transparent opacity-55 blur-[0.8px]"
+          style={{ animation: "card-beam-right 6.4s ease-in-out infinite 1.6s" }}
         />
         <span
-          className="absolute bottom-0 right-[-55%] h-[2px] w-[50%] bg-gradient-to-r from-transparent via-white/95 to-transparent opacity-75 blur-[0.8px]"
-          style={{ animation: "card-beam-bottom 2.8s ease-in-out infinite 1.4s" }}
+          className="absolute bottom-0 right-[-55%] h-[2px] w-[50%] bg-gradient-to-r from-transparent via-white/95 to-transparent opacity-55 blur-[0.8px]"
+          style={{ animation: "card-beam-bottom 6.4s ease-in-out infinite 3.2s" }}
         />
         <span
-          className="absolute bottom-[-55%] left-0 h-[50%] w-[2px] bg-gradient-to-b from-transparent via-white/95 to-transparent opacity-75 blur-[0.8px]"
-          style={{ animation: "card-beam-left 2.8s ease-in-out infinite 2.1s" }}
+          className="absolute bottom-[-55%] left-0 h-[50%] w-[2px] bg-gradient-to-b from-transparent via-white/95 to-transparent opacity-55 blur-[0.8px]"
+          style={{ animation: "card-beam-left 6.4s ease-in-out infinite 4.8s" }}
         />
       </div>
       <div
         className="pointer-events-none absolute inset-0 rounded-none p-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         style={{
           background:
-            "radial-gradient(220px circle at var(--mx) var(--my), rgba(255,255,255,0.95), rgba(255,255,255,0.3) 45%, transparent 75%)",
+            "radial-gradient(220px circle at var(--mx) var(--my), rgba(255,255,255,0.7), rgba(255,255,255,0.22) 45%, transparent 75%)",
         }}
       >
-        <div className="h-full w-full rounded-none bg-[rgba(242,242,242,0.92)]" />
+        <div className="h-full w-full rounded-none bg-[rgba(6,6,10,0.66)]" />
       </div>
-      <div className="pointer-events-none absolute inset-0 rounded-none border border-white/25 transition-colors duration-300 group-hover:border-white/70" />
+      <div className="pointer-events-none absolute inset-0 rounded-none border border-white/20 transition-colors duration-300 group-hover:border-white/60" />
       <div className="relative z-10">{children}</div>
       <style jsx>{`
         @keyframes card-beam-top {

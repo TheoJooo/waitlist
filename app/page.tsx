@@ -64,16 +64,16 @@ export default function Home() {
             <Image src={logo} alt="Various Archives logo" width={160} height={36} priority />
           </header>
 
-          <div className="grid flex-1 items-center gap-10 pt-3 md:grid-cols-2">
+          <div className="grid flex-1 items-center gap-10 pb-12 md:grid-cols-2">
             <div>
               <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Early Access Waitlist</p>
               <h1 className="mt-3 text-3xl font-semibold leading-thin text-[var(--text-white)]">
-                The world&apos;s best luxury vintage,<br/>curated by professionals,<br/>all in one place.
+                The World&apos;s Best Luxury Vintage.<br/>Curated by Professionals.<br/>All in One Place.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--alt-grey)]">
                 Various Archives connects you with vintage designer pieces from trusted boutiques worldwide.<br/>
-                Skip the uncertainty and endless scrolling.<br/>
-                Discover rare pieces curated by experts who live and breathe fashion history.
+                Skip the noise.<br/>
+                Discover what matters.
               </p>
             </div>
 
@@ -84,15 +84,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-5xl px-6 py-20">
+      <section className="mx-auto w-full max-w-5xl px-6 py-12">
         <p className="text-sm leading-relaxed text-[var(--text-grey)]">
-          Join <span className="font-semibold">50,000+</span> luxury fashion enthusiasts who follow
-          Various Archives for curated luxury vintage.
+          Join 1,000+ luxury fashion collectors who've secured their early access.
         </p>
         <div className="mt-4 grid gap-3 text-sm md:grid-cols-3">
           <p className="border border-[var(--alt-grey)] p-3">50k+ community across social</p>
+          <p className="border border-[var(--alt-grey)] p-3">Rare and archival pieces</p>
           <p className="border border-[var(--alt-grey)] p-3">Professional boutiques only</p>
-          <p className="border border-[var(--alt-grey)] p-3">1000+ early access signups</p>
         </div>
       </section>
 
