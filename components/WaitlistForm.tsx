@@ -18,15 +18,13 @@ type WaitlistFormProps = {
 };
 
 type FormValues = {
-  firstName: string;
-  lastName: string;
+  fullName: string;
   email: string;
   phone: string;
 };
 
 const INITIAL_VALUES: FormValues = {
-  firstName: '',
-  lastName: '',
+  fullName: '',
   email: '',
   phone: '',
 };
@@ -39,11 +37,20 @@ function buildErrorMessage(error: PostgrestError | null, fallbackMessage?: strin
 }
 
 function validate(values: FormValues) {
-  if (!values.firstName.trim()) return 'First name is required.';
-  if (!values.lastName.trim()) return 'Last name is required.';
+  if (!values.fullName.trim()) return 'Name is required.';
   if (!EMAIL_RGX.test(values.email.trim())) return 'Please enter a valid email address.';
   if (!PHONE_RGX.test(values.phone.trim())) return 'Please enter a valid phone number.';
   return '';
+}
+
+function splitFullName(fullName: string) {
+  const clean = fullName.trim().replace(/\s+/g, ' ');
+  if (!clean) return { firstName: '', lastName: '' };
+  const [firstName, ...rest] = clean.split(' ');
+  return {
+    firstName,
+    lastName: rest.join(' '),
+  };
 }
 
 async function insertInWaitlist(payload: Record<string, string>) {
@@ -119,9 +126,12 @@ export default function WaitlistForm({ location, title }: WaitlistFormProps) {
 
     setIsSubmitting(true);
 
+    const nameParts = splitFullName(values.fullName);
+
     const payload = {
-      first_name: values.firstName.trim(),
-      last_name: values.lastName.trim(),
+      first_name: nameParts.firstName,
+      last_name: nameParts.lastName,
+      full_name: values.fullName.trim(),
       email: values.email.trim().toLowerCase(),
       phone: values.phone.trim(),
       form_location: location,
@@ -165,67 +175,59 @@ export default function WaitlistForm({ location, title }: WaitlistFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+    <form onSubmit={handleSubmit} className="space-y-5" noValidate>
       {title ? (
-        <h3 className="text-xl font-semibold">{title}</h3>
+        <h3 className="text-xl font-semibold tracking-tight">{title}</h3>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="space-y-1 text-sm text-neutral-700">
-          <span>First name</span>
-          <input
-            value={values.firstName}
-            onFocus={trackFormStart}
-            onChange={(event) => updateField('firstName', event.target.value)}
-            autoComplete="given-name"
-            required
-            className="h-11 w-full border border-neutral-300 bg-white px-3 text-black outline-none focus:border-black"
-          />
+      <div className="space-y-3">
+        <label className="block space-y-1 text-sm text-neutral-700">
+          <span>Name</span>
+          <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
+            <input
+              value={values.fullName}
+              onFocus={trackFormStart}
+              onChange={(event) => updateField('fullName', event.target.value)}
+              autoComplete="name"
+              required
+              className="h-11 w-full rounded-none border border-neutral-300 bg-white px-3 text-black outline-none transition focus:border-black"
+            />
+          </div>
         </label>
-        <label className="space-y-1 text-sm text-neutral-700">
-          <span>Last name</span>
-          <input
-            value={values.lastName}
-            onFocus={trackFormStart}
-            onChange={(event) => updateField('lastName', event.target.value)}
-            autoComplete="family-name"
-            required
-            className="h-11 w-full border border-neutral-300 bg-white px-3 text-black outline-none focus:border-black"
-          />
+        <label className="block space-y-1 text-sm text-neutral-700">
+          <span>Email</span>
+          <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
+            <input
+              type="email"
+              value={values.email}
+              onFocus={trackFormStart}
+              onChange={(event) => updateField('email', event.target.value)}
+              autoComplete="email"
+              required
+              className="h-11 w-full rounded-none border border-neutral-300 bg-white px-3 text-black outline-none transition focus:border-black"
+            />
+          </div>
         </label>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="space-y-1 text-sm text-neutral-700">
-          <span>Email address</span>
-          <input
-            type="email"
-            value={values.email}
-            onFocus={trackFormStart}
-            onChange={(event) => updateField('email', event.target.value)}
-            autoComplete="email"
-            required
-            className="h-11 w-full border border-neutral-300 bg-white px-3 text-black outline-none focus:border-black"
-          />
-        </label>
-        <label className="space-y-1 text-sm text-neutral-700">
+        <label className="block space-y-1 text-sm text-neutral-700">
           <span>Phone number</span>
-          <input
-            type="tel"
-            value={values.phone}
-            onFocus={trackFormStart}
-            onChange={(event) => updateField('phone', event.target.value)}
-            autoComplete="tel"
-            required
-            className="h-11 w-full border border-neutral-300 bg-white px-3 text-black outline-none focus:border-black"
-          />
+          <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
+            <input
+              type="tel"
+              value={values.phone}
+              onFocus={trackFormStart}
+              onChange={(event) => updateField('phone', event.target.value)}
+              autoComplete="tel"
+              required
+              className="h-11 w-full rounded-none border border-neutral-300 bg-white px-3 text-black outline-none transition focus:border-black"
+            />
+          </div>
         </label>
       </div>
 
       <button
         type="submit"
         disabled={isSubmitting}
-        className="flex h-11 w-full items-center justify-center border border-black bg-black px-4 text-sm font-semibold uppercase tracking-[0.06em] text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-70"
+        className="flex h-11 w-full items-center justify-center rounded-none border border-black bg-black px-4 text-sm font-semibold uppercase tracking-[0.06em] text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-70"
       >
         {isSubmitting ? 'Submitting...' : 'Get Early Access'}
       </button>

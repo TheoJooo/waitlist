@@ -6,6 +6,7 @@ import WaitlistForm from '@/components/WaitlistForm';
 import PostHogPageView from '@/components/PostHogPageView';
 import BackgroundPaperShaders from '@/components/ui/background-paper-shaders';
 import { Accordion01 } from '@/components/ui/accordion-01-1';
+import GlowTiltCard from '@/components/ui/glow-tilt-card';
 import logo from '@/public/logo.png';
 
 const BENEFITS = [
@@ -76,9 +77,9 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-[var(--outline)] bg-[rgba(242,242,242,0.92)] p-5 backdrop-blur-sm">
+            <GlowTiltCard className="p-5">
               <WaitlistForm location="hero" />
-            </div>
+            </GlowTiltCard>
           </div>
         </div>
       </section>
@@ -137,7 +138,7 @@ export default function Home() {
       <section className="mx-auto w-full max-w-5xl border-t border-[var(--outline)] px-6 py-10">
         <h2 className="text-3xl font-semibold">Ready to shop the world&apos;s best archives?</h2>
         <p className="mt-2 text-[var(--text-grey)]">Get early access before we open to the public.</p>
-        <div className="mt-5 rounded-xl border border-[var(--alt-grey)] p-5">
+        <div className="mt-5 rounded-none border border-[var(--alt-grey)] p-5">
           <WaitlistForm location="footer" title="Get on the list before public launch" />
         </div>
       </section>
