@@ -10,6 +10,8 @@ import { Accordion01 } from '@/components/ui/accordion-01-1';
 import GlowTiltCard from '@/components/ui/glow-tilt-card';
 import FlyingPosters from '@/components/FlyingPosters';
 import StarBorder from '@/components/ui/star-border';
+import LightRays from '@/components/ui/light-rays';
+import StepperForm from '@/components/StepperForm';
 import logo from '@/public/logo.png';
 
 const POSTER_IMAGES = [
@@ -146,30 +148,36 @@ export default function Home() {
       <section className="relative w-full overflow-hidden">
         <div className="mx-auto max-w-5xl px-6 pt-10 pb-24 text-center">
           <p className="text-sm font-medium">Join 1,000+ luxury fashion collectors who&apos;ve secured their early access.</p>
-          <p className="mt-2 text-sm text-[var(--text-grey)]">
+          <p className="mt-2 text-sm text-[var(--text-grey)] hidden md:block">
             56k+ community · 172 designers · Selected professional sellers
           </p>
+          <div className="mt-2 flex flex-col gap-1 md:hidden">
+            <p className="text-sm text-[var(--text-grey)]">56k+ community</p>
+            <p className="text-sm text-[var(--text-grey)]">172 designers</p>
+            <p className="text-sm text-[var(--text-grey)]">Selected professional sellers</p>
+          </div>
         </div>
         <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-white" />
       </section>
 
       {/* Pain points */}
       <section className="w-full bg-white">
-        <div className="mx-auto max-w-5xl border-t border-[var(--outline)] px-6 py-32">
-          <h2 className="text-2xl font-semibold">The problem with luxury vintage today</h2>
+        <div className="mx-auto max-w-5xl md:border-t md:border-[var(--outline)] px-6 py-32">
+          <h2 className="text-2xl font-semibold px-4 md:px-0">The problem with luxury vintage today</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             {PAIN_POINTS.map((item) => (
-              <article key={item.number} className="border border-[var(--alt-grey)] p-4">
+              <article key={item.number} className="p-4">
                 <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">{item.number}</p>
                 <h3 className="mt-2 text-lg font-medium">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--text-grey)]">{item.description}</p>
               </article>
             ))}
           </div>
-          <div className="mt-8">
+          <div className="mt-16 md:mt-8 flex justify-center md:justify-start">
             <StarBorder
-              as="a"
-              href="#hero-form"
+              as="button"
+              type="button"
+              onClick={() => document.getElementById('footer-form')?.scrollIntoView({ behavior: 'smooth' })}
               color="rgba(17, 17, 17, 0.75)"
               speed="3.5s"
               thickness={1.5}
@@ -181,22 +189,36 @@ export default function Home() {
       </section>
 
       {/* Benefits */}
-      <section className="w-full bg-[var(--main-black)]">
-        <div className="mx-auto max-w-5xl px-6 py-32">
+      <section className="relative w-full bg-[var(--main-black)] overflow-hidden">
+        <div className="absolute inset-0">
+          <LightRays
+            raysOrigin="top-center"
+            raysColor="#ffffff"
+            raysSpeed={0.6}
+            lightSpread={1.4}
+            rayLength={2.5}
+            fadeDistance={0.9}
+            saturation={0.3}
+            mouseInfluence={0.08}
+          />
+        </div>
+        <div className="relative z-10 mx-auto max-w-5xl px-6 py-32">
           <h2 className="text-2xl font-semibold text-white">What Various Archives brings you</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             {BENEFITS.map((benefit) => (
-              <article key={benefit.title} className="border border-white/15 p-4">
+              <article key={benefit.title} className="border border-white/10 bg-black/50 p-4">
                 <h3 className="text-lg font-medium text-white">{benefit.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-400">{benefit.description}</p>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-300">{benefit.description}</p>
               </article>
             ))}
           </div>
-          <div className="mt-8 border border-white/15 p-5">
-            <WaitlistForm location="hero" variant="compact" buttonLabel="Secure My Spot" />
+          <div className="mt-8 border-t border-white/10 pt-8 flex flex-col items-center">
+            <p className="text-xs uppercase tracking-[0.08em] text-neutral-500 mb-4">Join the waitlist</p>
+            <StepperForm location="benefits" />
           </div>
         </div>
       </section>
+
 
       {/* Steps + Flying Posters */}
       <section className="relative mx-auto w-full max-w-5xl border-t border-[var(--outline)] overflow-hidden">
@@ -308,7 +330,7 @@ export default function Home() {
       </section>
 
       {/* Final CTA */}
-      <section className="mx-auto w-full max-w-5xl border-t border-[var(--outline)] px-6 py-32">
+      <section id="footer-form" className="mx-auto w-full max-w-5xl border-t border-[var(--outline)] px-6 py-32">
         <h2 className="text-3xl font-semibold">Don&apos;t miss the opening.</h2>
         <p className="mt-2 text-[var(--text-grey)]">Early access is limited to the waitlist. Free, takes 10 seconds.</p>
         <div className="mt-5 border border-[var(--alt-grey)] p-5">
