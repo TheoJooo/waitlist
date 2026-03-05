@@ -2,6 +2,7 @@
 
 import { createClient, type PostgrestError } from '@supabase/supabase-js';
 import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { capturePosthogEvent, getUtmFromWindow } from '@/lib/analytics';
 import StarBorder from '@/components/ui/star-border';
 
@@ -14,8 +15,10 @@ const supabase =
   supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 type WaitlistFormProps = {
-  location: 'hero' | 'footer';
+  location: 'hero' | 'mid' | 'footer';
+  variant?: 'compact';
   title?: string;
+  buttonLabel?: string;
 };
 
 type FormValues = {
@@ -37,10 +40,15 @@ function buildErrorMessage(error: PostgrestError | null, fallbackMessage?: strin
   return 'An error occurred. Please try again later.';
 }
 
-function validate(values: FormValues) {
+function validateFull(values: FormValues) {
   if (!values.fullName.trim()) return 'Name is required.';
   if (!EMAIL_RGX.test(values.email.trim())) return 'Please enter a valid email address.';
   if (!PHONE_RGX.test(values.phone.trim())) return 'Please enter a valid phone number.';
+  return '';
+}
+
+function validateCompact(values: FormValues) {
+  if (!EMAIL_RGX.test(values.email.trim())) return 'Please enter a valid email address.';
   return '';
 }
 
@@ -85,22 +93,22 @@ async function insertInWaitlist(payload: Record<string, string>) {
   return { error: fallbackInsert.error, fallbackMessage: '' };
 }
 
-export default function WaitlistForm({ location, title }: WaitlistFormProps) {
+export default function WaitlistForm({ location, variant, title, buttonLabel }: WaitlistFormProps) {
+  const router = useRouter();
   const [values, setValues] = useState<FormValues>(INITIAL_VALUES);
   const [errorMsg, setErrorMsg] = useState('');
-  const [success, setSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const hasTrackedStart = useRef(false);
   const isHero = location === 'hero';
+  const isCompact = variant === 'compact';
 
   const labelClassName = isHero ? 'block space-y-1 text-sm text-neutral-200' : 'block space-y-1 text-sm text-neutral-700';
   const inputClassName = isHero
     ? 'h-11 w-full rounded-none border border-white/45 bg-white/8 px-3 text-neutral-50 caret-white outline-none transition placeholder:text-neutral-400 focus:border-white focus:bg-white/12'
     : 'h-11 w-full rounded-none border border-neutral-300 bg-white px-3 text-black outline-none transition focus:border-black';
-  const helperStrongClassName = isHero ? 'text-sm font-semibold text-neutral-100' : 'text-sm font-semibold text-[var(--main-black)]';
-  const helperClassName = isHero ? 'text-xs text-neutral-400' : 'text-xs text-neutral-600';
   const errorClassName = isHero ? 'text-sm text-red-300' : 'text-sm text-red-700';
   const buttonEffectColor = isHero ? 'rgba(255, 255, 255, 0.95)' : 'rgba(17, 17, 17, 0.75)';
+  const ctaLabel = buttonLabel ?? 'Get Early Access';
 
   const trackFormStart = () => {
     if (hasTrackedStart.current) return;
@@ -121,7 +129,7 @@ export default function WaitlistForm({ location, title }: WaitlistFormProps) {
     setErrorMsg('');
     trackFormStart();
 
-    const validationError = validate(values);
+    const validationError = isCompact ? validateCompact(values) : validateFull(values);
     const utmProperties = getUtmFromWindow();
 
     if (validationError) {
@@ -139,15 +147,18 @@ export default function WaitlistForm({ location, title }: WaitlistFormProps) {
 
     const nameParts = splitFullName(values.fullName);
 
-    const payload = {
-      first_name: nameParts.firstName,
-      last_name: nameParts.lastName,
-      full_name: values.fullName.trim(),
+    const payload: Record<string, string> = {
       email: values.email.trim().toLowerCase(),
-      phone: values.phone.trim(),
       form_location: location,
       ...utmProperties,
     };
+
+    if (!isCompact) {
+      payload.first_name = nameParts.firstName;
+      payload.last_name = nameParts.lastName;
+      payload.full_name = values.fullName.trim();
+      payload.phone = values.phone.trim();
+    }
 
     const { error, fallbackMessage } = await insertInWaitlist(payload);
 
@@ -164,26 +175,17 @@ export default function WaitlistForm({ location, title }: WaitlistFormProps) {
       return;
     }
 
-    setSuccess(true);
-    setValues(INITIAL_VALUES);
-    setIsSubmitting(false);
-
     capturePosthogEvent('waitlist_signup_submitted', {
       form_location: location,
       ...utmProperties,
     });
-  };
 
-  if (success) {
-    return (
-      <div className={isHero ? 'border border-white/35 bg-black/45 p-5 text-neutral-100' : 'border border-neutral-300 p-5'}>
-        <h3 className="text-2xl font-semibold text-inherit">You&apos;re on the list.</h3>
-        <p className={isHero ? 'mt-2 text-sm text-neutral-300' : 'mt-2 text-sm text-neutral-700'}>
-          Thanks for joining. Early access invitations are sent in waves before public launch.
-        </p>
-      </div>
-    );
-  }
+    try {
+      sessionStorage.setItem('waitlist_email', values.email.trim().toLowerCase());
+    } catch {}
+
+    router.push('/thank-you');
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5" noValidate>
@@ -194,21 +196,25 @@ export default function WaitlistForm({ location, title }: WaitlistFormProps) {
       ) : null}
 
       <div className="space-y-3">
+        {!isCompact && (
+          <>
+            <label className={labelClassName}>
+              <span>Name</span>
+              <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
+                <input
+                  value={values.fullName}
+                  onFocus={trackFormStart}
+                  onChange={(event) => updateField('fullName', event.target.value)}
+                  autoComplete="name"
+                  required
+                  className={inputClassName}
+                />
+              </div>
+            </label>
+          </>
+        )}
         <label className={labelClassName}>
-          <span>Name</span>
-          <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
-            <input
-              value={values.fullName}
-              onFocus={trackFormStart}
-              onChange={(event) => updateField('fullName', event.target.value)}
-              autoComplete="name"
-              required
-              className={inputClassName}
-            />
-          </div>
-        </label>
-        <label className={labelClassName}>
-          <span>Email</span>
+          {!isCompact && <span>Email</span>}
           <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
             <input
               type="email"
@@ -216,25 +222,28 @@ export default function WaitlistForm({ location, title }: WaitlistFormProps) {
               onFocus={trackFormStart}
               onChange={(event) => updateField('email', event.target.value)}
               autoComplete="email"
+              placeholder={isCompact ? 'Your email' : undefined}
               required
               className={inputClassName}
             />
           </div>
         </label>
-        <label className={labelClassName}>
-          <span>Phone number</span>
-          <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
-            <input
-              type="tel"
-              value={values.phone}
-              onFocus={trackFormStart}
-              onChange={(event) => updateField('phone', event.target.value)}
-              autoComplete="tel"
-              required
-              className={inputClassName}
-            />
-          </div>
-        </label>
+        {!isCompact && (
+          <label className={labelClassName}>
+            <span>Phone number</span>
+            <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
+              <input
+                type="tel"
+                value={values.phone}
+                onFocus={trackFormStart}
+                onChange={(event) => updateField('phone', event.target.value)}
+                autoComplete="tel"
+                required
+                className={inputClassName}
+              />
+            </div>
+          </label>
+        )}
       </div>
 
       <StarBorder
@@ -246,11 +255,23 @@ export default function WaitlistForm({ location, title }: WaitlistFormProps) {
         speed="3.5s"
         thickness={1.5}
       >
-        {isSubmitting ? 'Submitting...' : 'Get Early Access'}
+        {isSubmitting ? 'Submitting...' : ctaLabel}
       </StarBorder>
 
-      <p className={helperStrongClassName}>First invites go out soon.</p>
-      <p className={helperClassName}>No spam. Unsubscribe anytime.</p>
+      {isCompact ? (
+        <p className={isHero ? 'text-xs text-neutral-400' : 'text-xs text-neutral-500'}>
+          No spam. Unsubscribe anytime.
+        </p>
+      ) : (
+        <>
+          <p className={isHero ? 'text-sm font-semibold text-neutral-100' : 'text-sm font-semibold text-[var(--main-black)]'}>
+            First invites go out soon.
+          </p>
+          <p className={isHero ? 'text-xs text-neutral-400' : 'text-xs text-neutral-600'}>
+            No spam. Unsubscribe anytime.
+          </p>
+        </>
+      )}
 
       {errorMsg ? <p className={errorClassName}>{errorMsg}</p> : null}
     </form>
