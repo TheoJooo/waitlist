@@ -52,7 +52,7 @@ export function Accordion01({ items, defaultValue, className }: Accordion01Props
               </div>
             </AccordionTrigger>
 
-            <AccordionContent className="pb-6 pr-3 text-[var(--text-grey)] md:pr-20">
+            <AccordionContent className="pb-6 pr-3 text-[var(--text-grey)] md:pr-20 whitespace-pre-line">
               {item.content}
             </AccordionContent>
           </AccordionItem>

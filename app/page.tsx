@@ -11,6 +11,7 @@ import GlowTiltCard from '@/components/ui/glow-tilt-card';
 import FlyingPosters from '@/components/FlyingPosters';
 import StarBorder from '@/components/ui/star-border';
 import LightRays from '@/components/ui/light-rays';
+import ImageTrail from '@/components/ui/image-trail';
 import StepperForm from '@/components/StepperForm';
 import logo from '@/public/logo.png';
 
@@ -64,25 +65,25 @@ const FAQ_ITEMS = [
     id: '01',
     title: 'When does access open?',
     content:
-      'We\'re launching soon. Waitlist members get invited first, before the platform opens to the public.',
+      'We\'re launching soon.\nWaitlist members get invited first, before the platform opens to the public.',
   },
   {
     id: '02',
     title: 'What will be on the platform?',
     content:
-      'A curated selection of luxury vintage and archival designer pieces, sourced from professional boutiques and specialist sellers across multiple countries and eras.',
+      'A curated selection of luxury vintage and archival designer pieces.\nSourced from professional boutiques and specialist sellers across multiple countries and eras.',
   },
   {
     id: '03',
     title: 'How do you ensure trust and authenticity?',
     content:
-      'Every seller is a vetted professional with established expertise in luxury vintage. Listings follow stricter standards on descriptions, condition, and seller context than typical resale platforms.',
+      'Every seller is a vetted professional with established expertise in luxury vintage.\nListings follow stricter standards on descriptions, condition, and seller context than typical resale platforms.',
   },
   {
     id: '04',
     title: 'How often will I receive emails?',
     content:
-      'Only for early access, drop previews, and key updates. No daily emails. Unsubscribe anytime.',
+      'Only for early access, drop previews, and key updates.\nNo daily emails. Unsubscribe anytime.',
   },
   {
     id: '05',
@@ -119,12 +120,12 @@ export default function Home() {
           }}
         />
 
-        <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-6 pt-6 pb-8">
-          <header className="flex items-center">
+        <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-6 pt-4 md:pt-6 pb-8">
+          <header className="flex items-center justify-center md:justify-start">
             <Image src={logo} alt="Various Archives logo" width={160} height={36} priority />
           </header>
 
-          <div className="grid flex-1 items-center gap-10 pb-12 md:grid-cols-2">
+          <div className="grid flex-1 items-center gap-10 pb-12 mt-10 md:mt-0 md:grid-cols-2">
             <div>
               <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Early Access Waitlist</p>
               <h1 className="mt-3 text-3xl font-semibold leading-thin text-[var(--text-white)]">
@@ -190,6 +191,10 @@ export default function Home() {
 
       {/* Benefits */}
       <section className="relative w-full bg-[var(--main-black)] overflow-hidden">
+        {/* ImageTrail — desktop only, pointer-events-none so content stays clickable */}
+        <div className="hidden md:block absolute inset-0 z-20">
+          <ImageTrail items={POSTER_IMAGES} />
+        </div>
         <div className="absolute inset-0">
           <LightRays
             raysOrigin="top-center"
@@ -202,11 +207,11 @@ export default function Home() {
             mouseInfluence={0.08}
           />
         </div>
-        <div className="relative z-10 mx-auto max-w-5xl px-6 py-32">
+        <div className="relative z-30 mx-auto max-w-5xl px-6 py-44">
           <h2 className="text-2xl font-semibold text-white">What Various Archives brings you</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             {BENEFITS.map((benefit) => (
-              <article key={benefit.title} className="border border-white/10 bg-black/50 p-4">
+              <article key={benefit.title} className="border border-white/10 bg-black/50 backdrop-blur-md p-4">
                 <h3 className="text-lg font-medium text-white">{benefit.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-neutral-300">{benefit.description}</p>
               </article>
@@ -330,7 +335,7 @@ export default function Home() {
       </section>
 
       {/* Final CTA */}
-      <section id="footer-form" className="mx-auto w-full max-w-5xl border-t border-[var(--outline)] px-6 py-32">
+      <section id="footer-form" className="mx-auto w-full max-w-5xl border-t border-[var(--outline)] px-6 py-44">
         <h2 className="text-3xl font-semibold">Don&apos;t miss the opening.</h2>
         <p className="mt-2 text-[var(--text-grey)]">Early access is limited to the waitlist. Free, takes 10 seconds.</p>
         <div className="mt-5 border border-[var(--alt-grey)] p-5">
