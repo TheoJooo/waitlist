@@ -24,7 +24,7 @@ export function Accordion01({ items, defaultValue, className }: Accordion01Props
     <div className={cn("mx-auto w-full", className)}>
       <Accordion
         type="single"
-        defaultValue={defaultValue ?? items[0]?.id}
+        defaultValue={defaultValue}
         collapsible
         className="w-full"
       >

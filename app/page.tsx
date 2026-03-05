@@ -178,7 +178,7 @@ export default function Home() {
             <StarBorder
               as="button"
               type="button"
-              onClick={() => document.getElementById('footer-form')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => document.getElementById('benefits')?.scrollIntoView({ behavior: 'smooth' })}
               color="rgba(17, 17, 17, 0.75)"
               speed="3.5s"
               thickness={1.5}
@@ -190,7 +190,8 @@ export default function Home() {
       </section>
 
       {/* Benefits */}
-      <section className="relative w-full bg-[var(--main-black)] overflow-hidden">
+      <section id="benefits" className="relative w-full bg-[var(--main-black)] overflow-hidden">
+
         {/* ImageTrail — desktop only, pointer-events-none so content stays clickable */}
         <div className="hidden md:block absolute inset-0 z-20">
           <ImageTrail items={POSTER_IMAGES} />
@@ -211,7 +212,7 @@ export default function Home() {
           <h2 className="text-2xl font-semibold text-white">What Various Archives brings you</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             {BENEFITS.map((benefit) => (
-              <article key={benefit.title} className="border border-white/10 bg-black/50 backdrop-blur-md p-4">
+              <article key={benefit.title} className="border border-white/10 bg-black/20 backdrop-blur-md px-4 pt-4 pb-6">
                 <h3 className="text-lg font-medium text-white">{benefit.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-neutral-300">{benefit.description}</p>
               </article>
@@ -224,9 +225,8 @@ export default function Home() {
         </div>
       </section>
 
-
       {/* Steps + Flying Posters */}
-      <section className="relative mx-auto w-full max-w-5xl border-t border-[var(--outline)] overflow-hidden">
+      <section className="relative mx-auto w-full max-w-5xl overflow-hidden">
         {/* Mobile: FlyingPosters as background */}
         {isMobile && (
           <div
@@ -327,19 +327,33 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section className="mx-auto w-full max-w-5xl border-t border-[var(--outline)] px-6 py-32">
+      <section className="mx-auto w-full max-w-5xl md:border-t md:border-[var(--outline)] px-6 py-32">
         <h2 className="text-2xl font-semibold">Good to know</h2>
         <div className="mt-5">
-          <Accordion01 items={FAQ_ITEMS} defaultValue="01" />
+          <Accordion01 items={FAQ_ITEMS} />
         </div>
       </section>
 
       {/* Final CTA */}
-      <section id="footer-form" className="mx-auto w-full max-w-5xl border-t border-[var(--outline)] px-6 py-44">
-        <h2 className="text-3xl font-semibold">Don&apos;t miss the opening.</h2>
-        <p className="mt-2 text-[var(--text-grey)]">Early access is limited to the waitlist. Free, takes 10 seconds.</p>
-        <div className="mt-5 border border-[var(--alt-grey)] p-5">
-          <WaitlistForm location="footer" variant="compact" />
+      <section id="footer-form" className="relative w-full bg-[var(--main-black)] overflow-hidden">
+        <div className="absolute inset-0">
+          <LightRays
+            raysOrigin="top-center"
+            raysColor="#ffffff"
+            raysSpeed={0.5}
+            lightSpread={1.2}
+            rayLength={2.0}
+            fadeDistance={0.85}
+            saturation={0.2}
+            mouseInfluence={0.06}
+          />
+        </div>
+        <div className="relative z-10 mx-auto max-w-5xl px-6 py-44 flex flex-col items-center text-center">
+          <h2 className="text-3xl font-semibold text-white">Don&apos;t miss the opening.</h2>
+          <p className="mt-3 text-[var(--alt-grey)]">Early access is limited to the waitlist. Free, takes 10 seconds.</p>
+          <div className="mt-10 w-full max-w-lg">
+            <StepperForm location="footer" />
+          </div>
         </div>
       </section>
 
