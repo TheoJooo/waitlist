@@ -55,6 +55,7 @@ interface CanvasParams {
   cameraFov: number;
   cameraZ: number;
   autoScrollSpeed: number;
+  disableInteraction: boolean;
 }
 
 const vertexShader = `
@@ -346,6 +347,7 @@ class Canvas {
   start = 0;
   loaded = 0;
   autoScrollSpeed = 0;
+  disableInteraction = false;
   rafId = 0;
 
   constructor({
@@ -358,7 +360,8 @@ class Canvas {
     scrollEase,
     cameraFov,
     cameraZ,
-    autoScrollSpeed
+    autoScrollSpeed,
+    disableInteraction
   }: CanvasParams) {
     this.container = container;
     this.canvas = canvas;
@@ -375,6 +378,7 @@ class Canvas {
     this.cameraFov = cameraFov;
     this.cameraZ = cameraZ;
     this.autoScrollSpeed = autoScrollSpeed;
+    this.disableInteraction = disableInteraction;
 
     AutoBind(this);
     this.createRenderer();
@@ -384,7 +388,7 @@ class Canvas {
     this.createGeometry();
     this.createMedias();
     this.update();
-    this.addEventListeners();
+    if (!disableInteraction) this.addEventListeners();
     this.createPreloader();
   }
 
@@ -529,6 +533,7 @@ interface FlyingPostersProps extends React.HTMLAttributes<HTMLDivElement> {
   cameraFov?: number;
   cameraZ?: number;
   autoScrollSpeed?: number;
+  disableInteraction?: boolean;
 }
 
 export default function FlyingPosters({
@@ -540,6 +545,7 @@ export default function FlyingPosters({
   cameraFov = 45,
   cameraZ = 20,
   autoScrollSpeed = 0,
+  disableInteraction = false,
   className,
   ...props
 }: FlyingPostersProps) {
@@ -560,17 +566,18 @@ export default function FlyingPosters({
       scrollEase,
       cameraFov,
       cameraZ,
-      autoScrollSpeed
+      autoScrollSpeed,
+      disableInteraction
     });
 
     return () => {
       instanceRef.current?.destroy();
       instanceRef.current = null;
     };
-  }, [items, planeWidth, planeHeight, distortion, scrollEase, cameraFov, cameraZ, autoScrollSpeed]);
+  }, [items, planeWidth, planeHeight, distortion, scrollEase, cameraFov, cameraZ, autoScrollSpeed, disableInteraction]);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || disableInteraction) return;
 
     const canvasEl = canvasRef.current;
 
@@ -592,7 +599,7 @@ export default function FlyingPosters({
       canvasEl.removeEventListener('wheel', handleWheel);
       canvasEl.removeEventListener('touchmove', handleTouchMove);
     };
-  }, []);
+  }, [disableInteraction]);
 
   return (
     <div ref={containerRef} className={`w-full h-full overflow-hidden relative z-2 ${className}`} {...props}>

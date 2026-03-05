@@ -40,16 +40,25 @@ function buildErrorMessage(error: PostgrestError | null, fallbackMessage?: strin
   return 'An error occurred. Please try again later.';
 }
 
-function validateFull(values: FormValues) {
-  if (!values.fullName.trim()) return 'Name is required.';
-  if (!EMAIL_RGX.test(values.email.trim())) return 'Please enter a valid email address.';
-  if (!PHONE_RGX.test(values.phone.trim())) return 'Please enter a valid phone number.';
-  return '';
+type FormErrors = {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  general?: string;
+};
+
+function validateFull(values: FormValues): FormErrors {
+  const errors: FormErrors = {};
+  if (!values.fullName.trim()) errors.fullName = 'Name is required.';
+  if (!EMAIL_RGX.test(values.email.trim())) errors.email = 'Please enter a valid email address.';
+  if (!PHONE_RGX.test(values.phone.trim())) errors.phone = 'Please enter a valid phone number.';
+  return errors;
 }
 
-function validateCompact(values: FormValues) {
-  if (!EMAIL_RGX.test(values.email.trim())) return 'Please enter a valid email address.';
-  return '';
+function validateCompact(values: FormValues): FormErrors {
+  const errors: FormErrors = {};
+  if (!EMAIL_RGX.test(values.email.trim())) errors.email = 'Please enter a valid email address.';
+  return errors;
 }
 
 function splitFullName(fullName: string) {
@@ -96,7 +105,7 @@ async function insertInWaitlist(payload: Record<string, string>) {
 export default function WaitlistForm({ location, variant, title, buttonLabel }: WaitlistFormProps) {
   const router = useRouter();
   const [values, setValues] = useState<FormValues>(INITIAL_VALUES);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const hasTrackedStart = useRef(false);
   const isHero = location === 'hero';
@@ -126,18 +135,19 @@ export default function WaitlistForm({ location, variant, title, buttonLabel }: 
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setErrorMsg('');
+    setErrors({});
     trackFormStart();
 
-    const validationError = isCompact ? validateCompact(values) : validateFull(values);
+    const validationErrors = isCompact ? validateCompact(values) : validateFull(values);
     const utmProperties = getUtmFromWindow();
 
-    if (validationError) {
-      setErrorMsg(validationError);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      const firstMessage = Object.values(validationErrors)[0] ?? 'Validation error';
       capturePosthogEvent('waitlist_signup_failed', {
         form_location: location,
         error_code: 'validation_error',
-        error_message: validationError,
+        error_message: firstMessage,
         ...utmProperties,
       });
       return;
@@ -164,7 +174,7 @@ export default function WaitlistForm({ location, variant, title, buttonLabel }: 
 
     if (error || fallbackMessage) {
       const message = buildErrorMessage(error, fallbackMessage);
-      setErrorMsg(message);
+      setErrors({ general: message });
       capturePosthogEvent('waitlist_signup_failed', {
         form_location: location,
         error_code: error?.code ?? (fallbackMessage ? 'missing_env' : 'unknown'),
@@ -197,7 +207,7 @@ export default function WaitlistForm({ location, variant, title, buttonLabel }: 
 
       <div className="space-y-3">
         {!isCompact && (
-          <>
+          <div>
             <label className={labelClassName}>
               <span>Name</span>
               <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
@@ -211,38 +221,45 @@ export default function WaitlistForm({ location, variant, title, buttonLabel }: 
                 />
               </div>
             </label>
-          </>
-        )}
-        <label className={labelClassName}>
-          {!isCompact && <span>Email</span>}
-          <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
-            <input
-              type="email"
-              value={values.email}
-              onFocus={trackFormStart}
-              onChange={(event) => updateField('email', event.target.value)}
-              autoComplete="email"
-              placeholder={isCompact ? 'Your email' : undefined}
-              required
-              className={inputClassName}
-            />
+            {errors.fullName && <p className={errorClassName}>{errors.fullName}</p>}
           </div>
-        </label>
-        {!isCompact && (
+        )}
+        <div>
           <label className={labelClassName}>
-            <span>Phone number</span>
+            {!isCompact && <span>Email</span>}
             <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
               <input
-                type="tel"
-                value={values.phone}
+                type="email"
+                value={values.email}
                 onFocus={trackFormStart}
-                onChange={(event) => updateField('phone', event.target.value)}
-                autoComplete="tel"
+                onChange={(event) => updateField('email', event.target.value)}
+                autoComplete="email"
+                placeholder={isCompact ? 'Your email' : undefined}
                 required
                 className={inputClassName}
               />
             </div>
           </label>
+          {errors.email && <p className={errorClassName}>{errors.email}</p>}
+        </div>
+        {!isCompact && (
+          <div>
+            <label className={labelClassName}>
+              <span>Phone number</span>
+              <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
+                <input
+                  type="tel"
+                  value={values.phone}
+                  onFocus={trackFormStart}
+                  onChange={(event) => updateField('phone', event.target.value)}
+                  autoComplete="tel"
+                  required
+                  className={inputClassName}
+                />
+              </div>
+            </label>
+            {errors.phone && <p className={errorClassName}>{errors.phone}</p>}
+          </div>
         )}
       </div>
 
@@ -273,7 +290,7 @@ export default function WaitlistForm({ location, variant, title, buttonLabel }: 
         </>
       )}
 
-      {errorMsg ? <p className={errorClassName}>{errorMsg}</p> : null}
+      {errors.general && <p className={errorClassName}>{errors.general}</p>}
     </form>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import WaitlistForm from '@/components/WaitlistForm';
@@ -88,7 +89,20 @@ const FAQ_ITEMS = [
   },
 ];
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+  return isMobile;
+}
+
 export default function Home() {
+  const isMobile = useIsMobile();
+
   return (
     <main className="min-h-screen bg-[var(--body-background)] text-[var(--main-black)]">
       <PostHogPageView />
@@ -96,6 +110,12 @@ export default function Home() {
       {/* Hero */}
       <section id="hero-form" className="relative w-full min-h-[100svh] overflow-hidden">
         <BackgroundPaperShaders />
+        <div
+          className="pointer-events-none absolute inset-0 z-[1]"
+          style={{
+            background: 'radial-gradient(ellipse 100% 30% at 50% 100%, #eee 0%, rgba(238,238,238,0.85) 25%, rgba(238,238,238,0.5) 55%, rgba(238,238,238,0.15) 75%, transparent 90%)',
+          }}
+        />
 
         <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-6 pt-6 pb-8">
           <header className="flex items-center">
@@ -123,81 +143,73 @@ export default function Home() {
       </section>
 
       {/* Social proof */}
-      <section className="mx-auto w-full max-w-5xl px-6 py-10">
-        <p className="text-sm text-[var(--text-grey)]">
-          56k+ community · 172 designers · Selected professional sellers
-        </p>
+      <section className="relative w-full overflow-hidden">
+        <div className="mx-auto max-w-5xl px-6 pt-10 pb-24 text-center">
+          <p className="text-sm font-medium">Join 1,000+ luxury fashion collectors who&apos;ve secured their early access.</p>
+          <p className="mt-2 text-sm text-[var(--text-grey)]">
+            56k+ community · 172 designers · Selected professional sellers
+          </p>
+        </div>
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-white" />
       </section>
 
       {/* Pain points */}
-      <section className="mx-auto w-full max-w-5xl border-t border-[var(--outline)] px-6 py-10">
-        <h2 className="text-2xl font-semibold">The problem with luxury vintage today</h2>
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          {PAIN_POINTS.map((item) => (
-            <article key={item.number} className="border border-[var(--alt-grey)] p-4">
-              <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">{item.number}</p>
-              <h3 className="mt-2 text-lg font-medium">{item.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--text-grey)]">{item.description}</p>
-            </article>
-          ))}
-        </div>
-        <div className="mt-8">
-          <StarBorder
-            as="a"
-            href="#hero-form"
-            color="rgba(17, 17, 17, 0.75)"
-            speed="3.5s"
-            thickness={1.5}
-          >
-            Get Early Access
-          </StarBorder>
+      <section className="w-full bg-white">
+        <div className="mx-auto max-w-5xl border-t border-[var(--outline)] px-6 py-32">
+          <h2 className="text-2xl font-semibold">The problem with luxury vintage today</h2>
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            {PAIN_POINTS.map((item) => (
+              <article key={item.number} className="border border-[var(--alt-grey)] p-4">
+                <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">{item.number}</p>
+                <h3 className="mt-2 text-lg font-medium">{item.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--text-grey)]">{item.description}</p>
+              </article>
+            ))}
+          </div>
+          <div className="mt-8">
+            <StarBorder
+              as="a"
+              href="#hero-form"
+              color="rgba(17, 17, 17, 0.75)"
+              speed="3.5s"
+              thickness={1.5}
+            >
+              Get Early Access
+            </StarBorder>
+          </div>
         </div>
       </section>
 
       {/* Benefits */}
-      <section className="mx-auto w-full max-w-5xl border-t border-[var(--outline)] px-6 py-10">
-        <h2 className="text-2xl font-semibold">What Various Archives brings you</h2>
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          {BENEFITS.map((benefit) => (
-            <article key={benefit.title} className="border border-[var(--alt-grey)] p-4">
-              <h3 className="text-lg font-medium">{benefit.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--text-grey)]">{benefit.description}</p>
-            </article>
-          ))}
-        </div>
-        <div className="mt-8 border border-[var(--alt-grey)] p-5">
-          <WaitlistForm location="mid" variant="compact" buttonLabel="Secure My Spot" />
+      <section className="w-full bg-[var(--main-black)]">
+        <div className="mx-auto max-w-5xl px-6 py-32">
+          <h2 className="text-2xl font-semibold text-white">What Various Archives brings you</h2>
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            {BENEFITS.map((benefit) => (
+              <article key={benefit.title} className="border border-white/15 p-4">
+                <h3 className="text-lg font-medium text-white">{benefit.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-400">{benefit.description}</p>
+              </article>
+            ))}
+          </div>
+          <div className="mt-8 border border-white/15 p-5">
+            <WaitlistForm location="hero" variant="compact" buttonLabel="Secure My Spot" />
+          </div>
         </div>
       </section>
 
       {/* Steps + Flying Posters */}
-      <section className="mx-auto w-full max-w-5xl border-t border-[var(--outline)] px-6 py-10">
-        <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-12">
-          <div className="flex-1">
-            <h2 className="text-2xl font-semibold">What happens next</h2>
-            <ol className="mt-5 grid gap-4">
-              <li className="border border-[var(--alt-grey)] p-4">
-                <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 1</p>
-                <h3 className="mt-2 text-lg font-medium">Sign up</h3>
-                <p className="mt-2 text-sm text-[var(--text-grey)]">Enter your email and you&apos;re on the list.</p>
-              </li>
-              <li className="border border-[var(--alt-grey)] p-4">
-                <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 2</p>
-                <h3 className="mt-2 text-lg font-medium">Get early updates</h3>
-                <p className="mt-2 text-sm text-[var(--text-grey)]">
-                  We&apos;ll share progress, new sellers, and first looks before anyone else.
-                </p>
-              </li>
-              <li className="border border-[var(--alt-grey)] p-4">
-                <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 3</p>
-                <h3 className="mt-2 text-lg font-medium">Shop first</h3>
-                <p className="mt-2 text-sm text-[var(--text-grey)]">
-                  When we launch, you get priority access to the full catalogue.
-                </p>
-              </li>
-            </ol>
-          </div>
-          <div className="h-[480px] w-full md:w-64 shrink-0">
+      <section className="relative mx-auto w-full max-w-5xl border-t border-[var(--outline)] overflow-hidden">
+        {/* Mobile: FlyingPosters as background */}
+        {isMobile && (
+          <div
+            className="absolute top-0 bottom-0 opacity-60"
+            style={{
+              width: '100vw',
+              left: 'calc(50% - 50vw)',
+              maskImage: 'linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%)',
+            }}
+          >
             <FlyingPosters
               items={POSTER_IMAGES}
               planeWidth={220}
@@ -207,13 +219,88 @@ export default function Home() {
               cameraFov={45}
               cameraZ={20}
               autoScrollSpeed={-0.01}
+              disableInteraction
             />
           </div>
+        )}
+
+        <div className="relative z-10 px-6 py-32">
+          <h2 className="text-2xl font-semibold">What happens next</h2>
+
+          {/* Mobile: stacked */}
+          <ol className="mt-5 grid gap-4 md:hidden">
+            <li className="border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4">
+              <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 1</p>
+              <h3 className="mt-2 text-lg font-medium">Sign up</h3>
+              <p className="mt-2 text-sm text-[var(--text-grey)]">Enter your email and you&apos;re on the list.</p>
+            </li>
+            <li className="border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4">
+              <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 2</p>
+              <h3 className="mt-2 text-lg font-medium">Get early updates</h3>
+              <p className="mt-2 text-sm text-[var(--text-grey)]">
+                We&apos;ll share progress, new sellers, and first looks before anyone else.
+              </p>
+            </li>
+            <li className="border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4">
+              <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 3</p>
+              <h3 className="mt-2 text-lg font-medium">Shop first</h3>
+              <p className="mt-2 text-sm text-[var(--text-grey)]">
+                When we launch, you get priority access to the full catalogue.
+              </p>
+            </li>
+          </ol>
+
+          {/* Desktop: alternating left/center/right */}
+          {!isMobile && (
+            <div className="mt-8 grid grid-cols-[1fr_220px_1fr] grid-rows-3 gap-x-16 gap-y-8 h-[480px]">
+              {/* Step 1 — left, row 1 */}
+              <article className="col-start-1 row-start-1 self-center border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4">
+                <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 1</p>
+                <h3 className="mt-2 text-lg font-medium">Sign up</h3>
+                <p className="mt-2 text-sm text-[var(--text-grey)]">Enter your email and you&apos;re on the list.</p>
+              </article>
+
+              {/* FlyingPosters — center, all 3 rows */}
+              <div
+                className="col-start-2 row-start-1 row-span-3 h-full"
+                style={{ maskImage: 'linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%)' }}
+              >
+                <FlyingPosters
+                  items={POSTER_IMAGES}
+                  planeWidth={220}
+                  planeHeight={280}
+                  distortion={3}
+                  scrollEase={0.05}
+                  cameraFov={45}
+                  cameraZ={20}
+                  autoScrollSpeed={-0.01}
+                />
+              </div>
+
+              {/* Step 2 — right, row 2 */}
+              <article className="col-start-3 row-start-2 self-center border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4">
+                <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 2</p>
+                <h3 className="mt-2 text-lg font-medium">Get early updates</h3>
+                <p className="mt-2 text-sm text-[var(--text-grey)]">
+                  We&apos;ll share progress, new sellers, and first looks before anyone else.
+                </p>
+              </article>
+
+              {/* Step 3 — left, row 3 */}
+              <article className="col-start-1 row-start-3 self-center border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4">
+                <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 3</p>
+                <h3 className="mt-2 text-lg font-medium">Shop first</h3>
+                <p className="mt-2 text-sm text-[var(--text-grey)]">
+                  When we launch, you get priority access to the full catalogue.
+                </p>
+              </article>
+            </div>
+          )}
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="mx-auto w-full max-w-5xl border-t border-[var(--outline)] px-6 py-10">
+      <section className="mx-auto w-full max-w-5xl border-t border-[var(--outline)] px-6 py-32">
         <h2 className="text-2xl font-semibold">Good to know</h2>
         <div className="mt-5">
           <Accordion01 items={FAQ_ITEMS} defaultValue="01" />
@@ -221,7 +308,7 @@ export default function Home() {
       </section>
 
       {/* Final CTA */}
-      <section className="mx-auto w-full max-w-5xl border-t border-[var(--outline)] px-6 py-10">
+      <section className="mx-auto w-full max-w-5xl border-t border-[var(--outline)] px-6 py-32">
         <h2 className="text-3xl font-semibold">Don&apos;t miss the opening.</h2>
         <p className="mt-2 text-[var(--text-grey)]">Early access is limited to the waitlist. Free, takes 10 seconds.</p>
         <div className="mt-5 border border-[var(--alt-grey)] p-5">
