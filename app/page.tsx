@@ -13,6 +13,9 @@ import StarBorder from '@/components/ui/star-border';
 import LightRays from '@/components/ui/light-rays';
 import ImageTrail from '@/components/ui/image-trail';
 import StepperForm from '@/components/StepperForm';
+import dynamic from 'next/dynamic';
+const WorldMap = dynamic(() => import('@/components/ui/map').then(m => m.WorldMap), { ssr: false });
+import ProfileCard from '@/components/ui/ProfileCard';
 import logo from '@/public/logo.png';
 
 const POSTER_IMAGES = [
@@ -92,6 +95,44 @@ const FAQ_ITEMS = [
   },
 ];
 
+const FOOTER_MAP_DOTS = [
+  // New York → London (W→E, court)
+  {
+    start: { lat: 40.7128, lng: -74.006, label: 'New York' },
+    end: { lat: 51.5074, lng: -0.1278, label: 'London' },
+  },
+  // Tokyo → Paris (E→W, long arc Eurasie)
+  {
+    start: { lat: 35.6762, lng: 139.6503, label: 'Tokyo' },
+    end: { lat: 48.8566, lng: 2.3522, label: 'Paris' },
+  },
+  // Los Angeles → Seoul (W→E, transpacifique)
+  {
+    start: { lat: 34.0522, lng: -118.2437, label: 'Los Angeles' },
+    end: { lat: 37.5665, lng: 126.978, label: 'Seoul' },
+  },
+  // Seoul → Toronto (E→W, arc polaire retour)
+  {
+    start: { lat: 37.5665, lng: 126.978, label: 'Seoul' },
+    end: { lat: 43.6532, lng: -79.3832, label: 'Toronto' },
+  },
+  // London → Bangkok (vers le sud-est)
+  {
+    start: { lat: 51.5074, lng: -0.1278, label: 'London' },
+    end: { lat: 13.7563, lng: 100.5018, label: 'Bangkok' },
+  },
+  // Berlin → Hong Kong (vers le sud-est)
+  {
+    start: { lat: 52.52, lng: 13.405, label: 'Berlin' },
+    end: { lat: 22.3193, lng: 114.1694, label: 'Hong Kong' },
+  },
+  // Shanghai → New York (E→W, route Pacifique)
+  {
+    start: { lat: 31.2304, lng: 121.4737, label: 'Shanghai' },
+    end: { lat: 40.7128, lng: -74.006, label: 'New York' },
+  },
+];
+
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -105,7 +146,6 @@ function useIsMobile() {
 
 export default function Home() {
   const isMobile = useIsMobile();
-
   return (
     <main className="min-h-screen bg-[var(--body-background)] text-[var(--main-black)]">
       <PostHogPageView />
@@ -162,7 +202,7 @@ export default function Home() {
       </section>
 
       {/* Pain points */}
-      <section className="w-full bg-white">
+      <section className="relative w-full bg-white overflow-hidden">
         <div className="mx-auto max-w-5xl md:border-t md:border-[var(--outline)] px-6 py-32">
           <h2 className="text-2xl font-semibold px-4 md:px-0">The problem with luxury vintage today</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
@@ -191,7 +231,6 @@ export default function Home() {
 
       {/* Benefits */}
       <section id="benefits" className="relative w-full bg-[var(--main-black)] overflow-hidden">
-
         {/* ImageTrail — desktop only, pointer-events-none so content stays clickable */}
         <div className="hidden md:block absolute inset-0 z-20">
           <ImageTrail items={POSTER_IMAGES} />
@@ -334,56 +373,75 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Final CTA */}
+      {/* Final CTA + Footer */}
       <section id="footer-form" className="relative w-full bg-[var(--main-black)] overflow-hidden">
-        <div className="absolute inset-0">
-          <LightRays
-            raysOrigin="top-center"
-            raysColor="#ffffff"
-            raysSpeed={0.5}
-            lightSpread={1.2}
-            rayLength={2.0}
-            fadeDistance={0.85}
-            saturation={0.2}
-            mouseInfluence={0.06}
+        <div className="absolute inset-0 pointer-events-none">
+          <WorldMap
+            dots={FOOTER_MAP_DOTS}
+            lineColor="#e8e8e8"
+            showLabels={false}
+            animationDuration={2.4}
+            loop
+            interactive={false}
+            className="h-full w-full rounded-none bg-transparent dark:bg-transparent aspect-auto opacity-50"
           />
         </div>
-        <div className="relative z-10 mx-auto max-w-5xl px-6 py-44 flex flex-col items-center text-center">
-          <h2 className="text-3xl font-semibold text-white">Don&apos;t miss the opening.</h2>
-          <p className="mt-3 text-[var(--alt-grey)]">Early access is limited to the waitlist. Free, takes 10 seconds.</p>
-          <div className="mt-10 w-full max-w-lg">
-            <StepperForm location="footer" />
+        <div className="absolute inset-0 bg-[var(--main-black)]/60 md:bg-[var(--main-black)]/72 pointer-events-none" />
+
+        <div className="relative z-10 mx-auto flex min-h-[760px] max-w-5xl items-center px-6 py-32 md:min-h-[820px] md:py-28">
+          <div className="grid gap-8 md:grid-cols-[0.85fr_1.15fr] md:items-center">
+            <div className="hidden md:flex md:justify-center md:items-center">
+              <ProfileCard
+                name="Various Archives"
+                title="Vintage Curator"
+                handle="various.archives"
+                status="Accepting Waitlist"
+                contactText="Join"
+                avatarUrl=""
+                behindGlowColor="rgba(180, 160, 130, 0.4)"
+                showUserInfo={true}
+                enableMobileTilt={true}
+                mobileTiltSensitivity={6}
+              />
+            </div>
+
+            <div className="flex flex-col items-center text-center md:items-start md:text-left">
+              <h2 className="text-3xl font-semibold text-white">Don&apos;t miss the opening.</h2>
+              <p className="mt-3 text-[var(--alt-grey)]">Early access is limited to the waitlist.<br/>Free, takes 10 seconds.</p>
+              <div className="mt-10 flex w-full max-w-lg justify-center md:justify-start">
+                <StepperForm location="footer" />
+              </div>
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="border-t border-[var(--outline)] px-6 py-8 text-sm text-center">
-        <div className="flex justify-center gap-5 mb-3">
-          <a
-            href="https://instagram.com/various.archives"
-            target="_blank"
-            rel="noreferrer"
-            className="text-[var(--text-grey)] hover:text-[var(--main-black)] transition-colors"
-          >
-            Instagram
-          </a>
-          <a
-            href="https://tiktok.com/@variousarchives"
-            target="_blank"
-            rel="noreferrer"
-            className="text-[var(--text-grey)] hover:text-[var(--main-black)] transition-colors"
-          >
-            TikTok
-          </a>
-        </div>
-        <p className="text-[var(--text-grey)]">
-          © 2026 Various Archives ·{' '}
-          <Link href="/privacy" className="hover:underline">Privacy Policy</Link>
-          {' '}·{' '}
-          <a href="mailto:contact@various-archives.com" className="hover:underline">Contact</a>
-        </p>
-      </footer>
+        <footer className="relative z-10 border-t border-white/10 px-6 py-8 text-sm text-center">
+          <div className="flex justify-center gap-5 mb-3">
+            <a
+              href="https://instagram.com/various.archives"
+              target="_blank"
+              rel="noreferrer"
+              className="text-white/40 hover:text-white/70 transition-colors"
+            >
+              Instagram
+            </a>
+            <a
+              href="https://tiktok.com/@variousarchives"
+              target="_blank"
+              rel="noreferrer"
+              className="text-white/40 hover:text-white/70 transition-colors"
+            >
+              TikTok
+            </a>
+          </div>
+          <p className="text-white/30">
+            © 2026 Various Archives ·{' '}
+            <Link href="/privacy" className="hover:text-white/50 transition-colors">Privacy Policy</Link>
+            {' '}·{' '}
+            <a href="mailto:contact@various-archives.com" className="hover:text-white/50 transition-colors">Contact</a>
+          </p>
+        </footer>
+      </section>
     </main>
   );
 }

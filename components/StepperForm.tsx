@@ -4,7 +4,6 @@ import { createClient, type PostgrestError } from '@supabase/supabase-js';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { capturePosthogEvent, getUtmFromWindow } from '@/lib/analytics';
-import StarBorder from '@/components/ui/star-border';
 
 const EMAIL_RGX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RGX = /^[\d+\-().\s]{7,20}$/;
@@ -195,24 +194,13 @@ export default function StepperForm({ location }: StepperFormProps) {
             </div>
           </div>
           {generalError && <p className={`${errorClass} mt-1`}>{generalError}</p>}
-          <div className="mt-3 flex items-center gap-4">
-            <StarBorder
-              as="button"
+          <div className="mt-3">
+            <button
               type="submit"
               disabled={isLoading}
-              color="rgba(255,255,255,0.95)"
-              speed="3.5s"
-              thickness={1.5}
-              className="!text-xs !px-4"
+              className="h-9 w-full border border-white/40 bg-white/15 text-white text-xs font-semibold uppercase tracking-widest whitespace-nowrap transition hover:bg-white/25 disabled:opacity-50"
             >
-              {isLoading ? 'Saving...' : 'Secure My Spot'}
-            </StarBorder>
-            <button
-              type="button"
-              onClick={() => router.push('/thank-you')}
-              className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors"
-            >
-              Skip for now
+              {isLoading ? 'Saving...' : 'Secure My Spot →'}
             </button>
           </div>
         </form>
