@@ -402,15 +402,16 @@ export default function Home() {
           }}
         />
 
-        <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-6 pt-4 md:pt-6 pb-8">
-          <header data-hero-logo className="flex items-center justify-center md:justify-start">
+        <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-6 pt-6 pb-8">
+          <header data-hero-logo className="flex shrink-0 items-center justify-center">
             <Image src={logo} alt="Various Archives logo" width={160} height={36} priority />
           </header>
 
-          <div className="grid flex-1 items-center gap-10 pb-12 mt-10 md:mt-0 md:grid-cols-2">
+          <div className="flex flex-1 items-center">
+          <div className="w-full grid gap-10 md:grid-cols-2 md:gap-10 md:pb-12">
             <div>
               <p data-hero-eyebrow className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Early Access Waitlist</p>
-              <h1 className="mt-3 text-3xl font-semibold leading-thin text-[var(--text-white)]">
+              <h1 className="mt-2 text-3xl font-semibold leading-thin text-[var(--text-white)] md:mt-3">
                 {HERO_TITLE_LINES.map((line) => (
                   <span key={line} className="block overflow-hidden">
                     <span data-hero-line className="block">
@@ -419,17 +420,18 @@ export default function Home() {
                   </span>
                 ))}
               </h1>
-              <p data-hero-copy className="mt-6 max-w-xl text-base leading-relaxed text-[var(--alt-grey)]">
+              <p data-hero-copy className="mt-5 max-w-xl text-base leading-relaxed text-[var(--alt-grey)] md:mt-6">
                 Various Archives connects you with vintage designer pieces from trusted boutiques worldwide.<br />
                 Skip the noise. Discover what matters.
               </p>
             </div>
 
             <div data-hero-card>
-              <GlowTiltCard className="px-8 py-8 translate-y-5">
+              <GlowTiltCard className="translate-y-5 px-5 py-5 md:px-8 md:py-8">
                 <WaitlistForm location="hero" />
               </GlowTiltCard>
             </div>
+          </div>
           </div>
         </div>
       </section>
@@ -667,8 +669,8 @@ export default function Home() {
           </div>
         </div>
 
-        <footer className="relative z-10 border-t border-white/10 px-6 py-8 text-sm text-center" data-reveal-group="soft">
-          <div data-reveal-item className="flex justify-center gap-5 mb-3">
+        <footer className="relative z-10 border-t border-white/10 px-6 py-8 text-sm text-center">
+          <div className="flex justify-center gap-5 mb-3">
             <a
               href="https://instagram.com/various.archives"
               target="_blank"
@@ -686,7 +688,7 @@ export default function Home() {
               TikTok
             </a>
           </div>
-          <p data-reveal-item className="text-white/30">
+          <p className="text-white/30">
             © 2026 Various Archives ·{' '}
             <Link href="/privacy" target="_blank" rel="noreferrer" className="hover:text-white/50 transition-colors">Privacy Policy</Link>
             {' '}·{' '}
