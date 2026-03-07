@@ -313,6 +313,38 @@ function useIsMobile() {
 export default function Home() {
   const isMobile = useIsMobile();
   const pageRef = useRef<HTMLElement>(null);
+  const introOverlayRef = useRef<HTMLDivElement>(null);
+  const introTextRef = useRef<HTMLParagraphElement>(null);
+  const contentShellRef = useRef<HTMLDivElement>(null);
+  const heroBackgroundRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (prefersReducedMotion) {
+        gsap.set([heroBackgroundRef.current, contentShellRef.current], { autoAlpha: 1 });
+        gsap.set(introOverlayRef.current, { autoAlpha: 0 });
+        return;
+      }
+
+      const entryTimeline = gsap.timeline({
+        defaults: { ease: 'power2.out' },
+      });
+
+      gsap.set(heroBackgroundRef.current, { autoAlpha: 0 });
+      gsap.set(contentShellRef.current, { autoAlpha: 0 });
+      gsap.set(introTextRef.current, { autoAlpha: 0, y: 12 });
+
+      entryTimeline
+        .to(introTextRef.current, { autoAlpha: 1, y: 0, duration: 0.32, delay: 0.04 })
+        .to(introTextRef.current, { autoAlpha: 0, y: -10, duration: 0.22, delay: 0.16 })
+        .to(heroBackgroundRef.current, { autoAlpha: 1, duration: 0.62 }, '-=0.08')
+        .to(contentShellRef.current, { autoAlpha: 1, duration: 0.52 }, '<')
+        .to(introOverlayRef.current, { autoAlpha: 0, duration: 0.4 }, '-=0.26');
+    },
+    { scope: pageRef }
+  );
 
   useGSAP(
     () => {
@@ -328,6 +360,7 @@ export default function Home() {
 
       const heroTimeline = gsap.timeline({
         defaults: { ease: 'power3.out' },
+        delay: 0.48,
       });
 
       if (heroLogo) {
@@ -391,16 +424,30 @@ export default function Home() {
   return (
     <main ref={pageRef} className="min-h-screen bg-[var(--body-background)] text-[var(--main-black)]">
       <PostHogPageView />
+      <div
+        ref={introOverlayRef}
+        className="fixed inset-0 z-[80] flex items-center justify-center bg-[#f5f3ee] px-6 text-center"
+      >
+        <p
+          ref={introTextRef}
+          className="max-w-sm text-base font-medium tracking-[-0.02em] text-[var(--main-black)] md:text-lg"
+        >
+          Hello, we are glad you arrive there.
+        </p>
+      </div>
+      <div ref={contentShellRef}>
 
       {/* Hero */}
       <section id="hero-form" className="relative w-full min-h-[100svh] overflow-hidden">
-        <BackgroundPaperShaders />
-        <div
-          className="pointer-events-none absolute inset-0 z-[1]"
-          style={{
-            background: 'radial-gradient(ellipse 100% 30% at 50% 100%, #eee 0%, rgba(238,238,238,0.85) 25%, rgba(238,238,238,0.5) 55%, rgba(238,238,238,0.15) 75%, transparent 90%)',
-          }}
-        />
+        <div ref={heroBackgroundRef} className="absolute inset-0">
+          <BackgroundPaperShaders />
+          <div
+            className="pointer-events-none absolute inset-0 z-[1]"
+            style={{
+              background: 'radial-gradient(ellipse 100% 30% at 50% 100%, #eee 0%, rgba(238,238,238,0.85) 25%, rgba(238,238,238,0.5) 55%, rgba(238,238,238,0.15) 75%, transparent 90%)',
+            }}
+          />
+        </div>
 
         <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-6 pt-6 pb-8">
           <header data-hero-logo className="flex shrink-0 items-center justify-center">
@@ -426,7 +473,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div data-hero-card>
+            <div data-hero-card className="md:self-end md:pb-[22px]">
               <GlowTiltCard className="translate-y-5 px-5 py-5 md:px-8 md:py-8">
                 <WaitlistForm location="hero" />
               </GlowTiltCard>
@@ -696,6 +743,7 @@ export default function Home() {
           </p>
         </footer>
       </section>
+      </div>
     </main>
   );
 }
