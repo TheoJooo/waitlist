@@ -477,7 +477,7 @@ class Canvas {
   }
 
   onTouchMove(e: MouseEvent | TouchEvent) {
-    if (!this.isDown || !this.scroll.position) return;
+    if (!this.isDown || this.scroll.position === undefined) return;
     const y = e instanceof TouchEvent ? e.touches[0].clientY : e.clientY;
     const distance = (this.start - y) * 0.1;
     this.scroll.target = this.scroll.position + distance;
@@ -485,10 +485,18 @@ class Canvas {
 
   onTouchUp() {
     this.isDown = false;
+    this.scroll.position = undefined;
   }
 
   onWheel(e: WheelEvent) {
+    e.preventDefault();
     this.scroll.target += e.deltaY * 0.005;
+  }
+
+  onLocalTouchMove(e: TouchEvent) {
+    if (!this.isDown) return;
+    e.preventDefault();
+    this.onTouchMove(e);
   }
 
   update() {
@@ -502,25 +510,27 @@ class Canvas {
 
   addEventListeners() {
     window.addEventListener('resize', this.onResize);
-    window.addEventListener('wheel', this.onWheel);
-    window.addEventListener('mousedown', this.onTouchDown);
+    this.container.addEventListener('wheel', this.onWheel, { passive: false });
+    this.container.addEventListener('mousedown', this.onTouchDown);
+    this.container.addEventListener('touchstart', this.onTouchDown as EventListener, { passive: true });
+    this.container.addEventListener('touchmove', this.onLocalTouchMove as EventListener, { passive: false });
     window.addEventListener('mousemove', this.onTouchMove);
     window.addEventListener('mouseup', this.onTouchUp);
-    window.addEventListener('touchstart', this.onTouchDown as EventListener);
-    window.addEventListener('touchmove', this.onTouchMove as EventListener);
     window.addEventListener('touchend', this.onTouchUp as EventListener);
+    window.addEventListener('touchcancel', this.onTouchUp as EventListener);
   }
 
   destroy() {
     cancelAnimationFrame(this.rafId);
     window.removeEventListener('resize', this.onResize);
-    window.removeEventListener('wheel', this.onWheel);
-    window.removeEventListener('mousedown', this.onTouchDown);
+    this.container.removeEventListener('wheel', this.onWheel);
+    this.container.removeEventListener('mousedown', this.onTouchDown);
+    this.container.removeEventListener('touchstart', this.onTouchDown as EventListener);
+    this.container.removeEventListener('touchmove', this.onLocalTouchMove as EventListener);
     window.removeEventListener('mousemove', this.onTouchMove);
     window.removeEventListener('mouseup', this.onTouchUp);
-    window.removeEventListener('touchstart', this.onTouchDown as EventListener);
-    window.removeEventListener('touchmove', this.onTouchMove as EventListener);
     window.removeEventListener('touchend', this.onTouchUp as EventListener);
+    window.removeEventListener('touchcancel', this.onTouchUp as EventListener);
   }
 }
 
@@ -578,31 +588,6 @@ export default function FlyingPosters({
       instanceRef.current = null;
     };
   }, [items, planeWidth, planeHeight, distortion, scrollEase, cameraFov, cameraZ, autoScrollSpeed, disableInteraction]);
-
-  useEffect(() => {
-    if (!canvasRef.current || disableInteraction) return;
-
-    const canvasEl = canvasRef.current;
-
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      if (instanceRef.current) {
-        instanceRef.current.onWheel(e);
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
-    };
-
-    canvasEl.addEventListener('wheel', handleWheel, { passive: false });
-    canvasEl.addEventListener('touchmove', handleTouchMove, { passive: false });
-
-    return () => {
-      canvasEl.removeEventListener('wheel', handleWheel);
-      canvasEl.removeEventListener('touchmove', handleTouchMove);
-    };
-  }, [disableInteraction]);
 
   return (
     <div

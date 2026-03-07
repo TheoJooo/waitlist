@@ -1,17 +1,11 @@
 'use client';
 
-import { createClient } from '@supabase/supabase-js';
-import { useRef, useState, useEffect } from 'react';
+import { startTransition, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { capturePosthogEvent, getUtmFromWindow } from '@/lib/analytics';
+import { EMAIL_RGX } from '@/lib/waitlist';
+import { submitWaitlistSignup } from '@/lib/waitlist-api';
 import StarBorder from '@/components/ui/star-border';
-
-const EMAIL_RGX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase =
-  supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 type StepperFormProps = {
   location: string;
@@ -21,6 +15,8 @@ export default function StepperForm({ location }: StepperFormProps) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [generalError, setGeneralError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const hasTrackedStart = useRef(false);
 
   useEffect(() => { router.prefetch('/thank-you'); }, [router]);
@@ -31,9 +27,10 @@ export default function StepperForm({ location }: StepperFormProps) {
     capturePosthogEvent('waitlist_form_started', { form_location: location, ...getUtmFromWindow() });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setEmailError('');
+    setGeneralError('');
     trackStart();
 
     if (!EMAIL_RGX.test(email.trim())) {
@@ -46,11 +43,24 @@ export default function StepperForm({ location }: StepperFormProps) {
 
     try { sessionStorage.setItem('waitlist_email', trimmedEmail); } catch {}
     capturePosthogEvent('waitlist_signup_submitted', { form_location: location, ...utmProperties });
-    router.push('/thank-you');
 
-    if (supabase) {
-      supabase.from('waitlist').insert({ email: trimmedEmail, form_location: location, ...utmProperties });
+    setIsSubmitting(true);
+
+    const result = await submitWaitlistSignup({
+      email: trimmedEmail,
+      formLocation: location,
+      utmProperties,
+    });
+
+    if (!result.ok) {
+      setGeneralError(result.error);
+      setIsSubmitting(false);
+      return;
     }
+
+    startTransition(() => {
+      router.push('/thank-you');
+    });
   };
 
   const inputClass = 'h-11 w-full border border-white/35 bg-white/12 px-3 text-white caret-white outline-none transition placeholder:text-neutral-400 focus:border-white/60 focus:bg-white/18 text-sm';
@@ -75,14 +85,16 @@ export default function StepperForm({ location }: StepperFormProps) {
           <StarBorder
             as="button"
             type="submit"
+            disabled={isSubmitting}
             color="rgba(255,255,255,0.85)"
             speed="3.5s"
             thickness={1.5}
           >
-            Secure My Spot
+            {isSubmitting ? 'Submitting...' : 'Secure My Spot'}
           </StarBorder>
         </div>
         {emailError && <p className={errorClass}>{emailError}</p>}
+        {generalError && <p className={errorClass}>{generalError}</p>}
         <p className="mt-2 text-[11px] text-neutral-600">No spam. Unsubscribe anytime.</p>
       </form>
     </div>

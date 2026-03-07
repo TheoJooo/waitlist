@@ -1,20 +1,301 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
-export const metadata = {
-  title: 'Privacy | Various Archives',
+export const metadata: Metadata = {
+  title: 'Privacy Policy | Various Archives',
+  description: 'How Various Archives collects, uses, shares, and protects personal data.',
 };
+
+const lastUpdated = 'March 7, 2026';
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="mt-8">
+      <h2 className="text-lg font-semibold text-[#1a140f]">{title}</h2>
+      <div className="mt-2 space-y-3 text-sm leading-6 text-[#4b4032]">{children}</div>
+    </section>
+  );
+}
+
+function List({ items }: { items: readonly ReactNode[] }) {
+  return (
+    <ul className="space-y-1 pl-5">
+      {items.map((item, index) => (
+        <li key={index} className="list-disc">
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export default function PrivacyPage() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-3xl px-6 py-14 text-[#1a140f]">
-      <h1 className="font-serif-heading text-4xl">Privacy Policy</h1>
-      <p className="mt-4 text-sm leading-relaxed text-[#4b4032]">
-        This placeholder page exists so the landing page footer links resolve correctly. Replace
-        this content with your legal privacy policy before launch.
-      </p>
-      <Link href="/" className="mt-8 inline-flex text-sm underline underline-offset-2">
+      <Link href="/" className="inline-flex text-sm underline underline-offset-2">
         Back to waitlist
       </Link>
+
+      <h1 className="mt-8 text-4xl font-semibold tracking-tight">Privacy Policy</h1>
+      <p className="mt-3 text-sm text-[#4b4032]">Last updated: {lastUpdated}</p>
+
+      <div className="mt-6 space-y-3 text-sm leading-6 text-[#4b4032]">
+        <p>
+          This Privacy Policy explains how Various Archives (&quot;Various Archives,&quot;
+          &quot; we,&quot; &quot; us,&quot; and &quot; our&quot;) processes personal data when you
+          use our website, create an account, join our waitlist or newsletter, contact us, or
+          apply as a seller.
+        </p>
+        <p>
+          We operate from France. If you click through to a seller&apos;s website to complete a
+          purchase, that seller processes your data under its own privacy policy.
+        </p>
+      </div>
+
+      <Section title="1. Data Controller and contact">
+        <p>Data Controller: Various Archives</p>
+        <p>
+          Email:{' '}
+          <a href="mailto:contact@various-archives.com" className="underline underline-offset-2">
+            contact@various-archives.com
+          </a>
+        </p>
+        <p>Postal address: [To be completed]</p>
+        <p>
+          We have not appointed a Data Protection Officer at this time. If that changes, we will
+          update this policy.
+        </p>
+      </Section>
+
+      <Section title="2. Who this policy applies to">
+        <List
+          items={[
+            'Visitors to our website',
+            'Users who create an account',
+            'Individuals who join our waitlist or newsletter',
+            'Individuals who contact us',
+            'Seller applicants, including individuals acting on behalf of a store or company',
+          ]}
+        />
+      </Section>
+
+      <Section title="3. Personal data we collect">
+        <p className="font-medium text-[#1a140f]">A. Information you provide to us</p>
+        <p className="font-medium text-[#1a140f]">Waitlist and newsletter</p>
+        <List items={['Email address', 'Optional: name, country, and preferences']} />
+
+        <p className="font-medium text-[#1a140f]">Account creation</p>
+        <List items={['Email address', 'Authentication data needed to access your account']} />
+
+        <p className="font-medium text-[#1a140f]">Contact</p>
+        <List items={['Name if provided', 'Email address', 'Message content and any attachments you send']} />
+
+        <p className="font-medium text-[#1a140f]">Seller applications</p>
+        <List
+          items={[
+            'Store or business name',
+            'Name of a contact person',
+            'Business email, phone, and address if provided',
+            'Store links such as website and social accounts',
+            'Verification information if requested during the application process',
+            'Communications related to the application',
+          ]}
+        />
+
+        <p className="font-medium text-[#1a140f]">
+          B. Information we collect automatically when you use the website
+        </p>
+        <p className="font-medium text-[#1a140f]">Technical and usage data</p>
+        <List
+          items={[
+            'IP address',
+            'Device and browser information',
+            'Pages viewed, approximate timestamps, and referral information',
+            'Diagnostic and security logs',
+          ]}
+        />
+        <p>
+          This information is typically generated by hosting and security operations.
+        </p>
+
+        <p className="font-medium text-[#1a140f]">C. Information we receive from third parties</p>
+        <List
+          items={[
+            'Limited contact information relevant to a platform request, if provided by a seller',
+            "Information collected independently by sellers when you visit their websites",
+          ]}
+        />
+      </Section>
+
+      <Section title="4. Why we process your data and legal bases">
+        <p>
+          <span className="font-medium text-[#1a140f]">A. Provide and operate the platform.</span>{' '}
+          Access to the website, account creation, and core functionality. Legal basis:
+          performance of a contract, pre-contractual steps, or legitimate interests depending on
+          the context.
+        </p>
+
+        <p>
+          <span className="font-medium text-[#1a140f]">B. Respond to you.</span> Inquiries,
+          support, and communications. Legal basis: legitimate interests or steps at your request.
+        </p>
+
+        <p>
+          <span className="font-medium text-[#1a140f]">C. Manage waitlist and newsletter.</span>{' '}
+          Launch updates and newsletter content. Legal basis: consent where required. You can
+          withdraw consent at any time.
+        </p>
+
+        <p>
+          <span className="font-medium text-[#1a140f]">
+            D. Review seller applications and maintain marketplace integrity.
+          </span>{' '}
+          Review applications, verify professional status, prevent fraud, and manage onboarding.
+          Legal basis: legitimate interests and steps at your request.
+        </p>
+
+        <p>
+          <span className="font-medium text-[#1a140f]">E. Security and abuse prevention.</span>{' '}
+          Protect the platform, detect abuse, prevent attacks, and troubleshoot issues. Legal
+          basis: legitimate interests.
+        </p>
+
+        <p>
+          <span className="font-medium text-[#1a140f]">F. Legal obligations.</span> Comply with
+          applicable laws and respond to lawful requests. Legal basis: legal obligation.
+        </p>
+      </Section>
+
+      <Section title="5. Marketing communications">
+        <p>
+          If you join our newsletter or opt in to updates, we may send you emails. You can
+          unsubscribe at any time using the link in our emails or by contacting us. We may also
+          use double opt-in to strengthen consent records.
+        </p>
+      </Section>
+
+      <Section title="6. Cookies and similar technologies">
+        <p>
+          We explain cookies and similar technologies in a separate Cookie Policy: [link to be
+          added]. For many non-essential trackers, EU rules require prior consent and an easy way
+          to withdraw it.
+        </p>
+      </Section>
+
+      <Section title="7. Who we share personal data with">
+        <p>We do not sell your personal data.</p>
+        <p>We share personal data only as needed with:</p>
+        <List
+          items={[
+            'Our internal team on a limited, need-to-know basis',
+            'Service providers that process data on our behalf',
+            'Authorities, courts, or parties where required by law',
+          ]}
+        />
+
+        <p>Current key service providers include:</p>
+        <List
+          items={[
+            'Hosting and delivery: Vercel',
+            'Database and possibly authentication: Supabase',
+            'Email and domain services: Infomaniak',
+            'Analytics if enabled: PostHog',
+          ]}
+        />
+
+        <p>We will update this section if these providers materially change.</p>
+      </Section>
+
+      <Section title="8. International data transfers">
+        <p>
+          Because we work with global infrastructure providers, personal data may be processed
+          outside the European Economic Area.
+        </p>
+        <p>Where relevant, we rely on recognized transfer mechanisms such as:</p>
+        <List
+          items={[
+            'Adequacy decisions where applicable',
+            'Standard Contractual Clauses adopted by the European Commission',
+            'Other mechanisms described in vendor agreements where applicable',
+          ]}
+        />
+      </Section>
+
+      <Section title="9. Data retention">
+        <p>
+          We keep personal data only as long as necessary for the purposes described above.
+          Indicative retention periods are:
+        </p>
+        <List
+          items={[
+            'Waitlist and newsletter contacts: up to 3 years from the last interaction',
+            'Contact requests: typically up to 24 months after resolution, unless longer retention is needed for disputes',
+            'Seller applications: up to 24 months after the final decision, unless onboarding or legal needs require longer',
+            'Account data: for as long as the account is active, with limited retention after deletion where needed for security, fraud prevention, or legal claims',
+            'Security and technical logs: limited retention, then deletion or anonymization',
+          ]}
+        />
+      </Section>
+
+      <Section title="10. Security">
+        <p>
+          We use reasonable technical and organizational measures to protect personal data. No
+          method of transmission or storage is fully secure, but we work to reduce risk and respond
+          to incidents.
+        </p>
+      </Section>
+
+      <Section title="11. Your rights">
+        <p>Depending on your location, you may have rights to:</p>
+        <List
+          items={[
+            'Access your data',
+            'Rectify inaccurate data',
+            'Delete data',
+            'Restrict processing',
+            'Object to processing based on legitimate interests',
+            'Data portability',
+            'Withdraw consent where processing is based on consent',
+          ]}
+        />
+        <p>
+          To exercise your rights, email{' '}
+          <a href="mailto:contact@various-archives.com" className="underline underline-offset-2">
+            contact@various-archives.com
+          </a>
+          . We may ask for information to verify your identity.
+        </p>
+        <p>Complaints: if you are in France, you can lodge a complaint with the CNIL.</p>
+      </Section>
+
+      <Section title="12. Children">
+        <p>
+          Our website is not intended for children. If you believe a child provided personal data,
+          contact us so we can delete it where appropriate.
+        </p>
+      </Section>
+
+      <Section title="13. Automated decision making">
+        <p>
+          We do not use automated decision making that produces legal or similarly significant
+          effects on you.
+        </p>
+      </Section>
+
+      <Section title="14. Changes to this policy">
+        <p>
+          We may update this policy to reflect changes in our practices, features, or legal
+          requirements. We will update the &quot;Last updated&quot; date and may provide additional
+          notice when appropriate.
+        </p>
+      </Section>
     </main>
   );
 }

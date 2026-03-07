@@ -1,17 +1,23 @@
 'use client';
 
-import { createClient } from '@supabase/supabase-js';
 import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { saveWaitlistPreferences } from '@/lib/waitlist-api';
 import StarBorder from '@/components/ui/star-border';
 import SplitText from '@/components/ui/SplitText';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase =
-  supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
-
 const CATEGORIES = ['Bags', 'Clothing', 'Shoes', 'Accessories', 'Jewelry'];
+const SOCIAL_LINKS = [
+  {
+    label: 'Follow on Instagram',
+    href: 'https://instagram.com/various.archives',
+  },
+  {
+    label: 'Follow on TikTok',
+    href: 'https://tiktok.com/@variousarchives',
+  },
+];
+const CONTACT_EMAIL = 'contact@various-archives.com';
 const PAGE_VERTICAL_PADDING = 64;
 const CONTENT_REVEAL_DELAY_MS = 230;
 const MOTION_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
@@ -141,31 +147,29 @@ export default function ThankYouPage() {
   };
 
   const handleSave = async () => {
+    if (!email) {
+      setSaveError('Missing waitlist email. Go back to the waitlist form and try again.');
+      return;
+    }
+
     setIsSaving(true);
     setSaveError('');
 
-    const payload = {
+    const result = await saveWaitlistPreferences({
       email,
       gender,
-      categories: categories.join(', '),
-      favourite_designers: designers.trim(),
-      first_name: firstName.trim(),
-    };
-
-    if (supabase && email) {
-      const { error } = await supabase.from('waitlist_preferences').insert(payload);
-      if (error && error.code !== 'PGRST204') {
-        // Fallback: try updating the waitlist row directly
-        await supabase.from('waitlist').update({
-          gender: payload.gender,
-          categories: payload.categories,
-          favourite_designers: payload.favourite_designers,
-          first_name: payload.first_name,
-        }).eq('email', email);
-      }
-    }
+      categories,
+      favouriteDesigners: designers,
+      firstName,
+    });
 
     setIsSaving(false);
+
+    if (!result.ok) {
+      setSaveError(result.error);
+      return;
+    }
+
     setSaved(true);
   };
 
@@ -251,23 +255,57 @@ export default function ThankYouPage() {
                 initial={prefersReducedMotion ? false : 'hidden'}
                 animate="visible"
               >
-                <motion.div variants={CONTENT_ITEM_VARIANTS}>
-                  <h2 className="text-xl font-semibold">Tell us what you&apos;re looking for.</h2>
-                  <p className="mt-2 text-sm text-[var(--text-grey)]">
-                    Optional. 20 seconds. So we show you the right pieces first.
-                  </p>
-                </motion.div>
-
                 {saved ? (
-                  <motion.div
-                    variants={CONTENT_ITEM_VARIANTS}
-                    className="mt-8 border border-[var(--alt-grey)] p-5"
-                  >
-                    <p className="text-base font-medium">Preferences saved.</p>
-                    <p className="mt-1 text-sm text-[var(--text-grey)]">You can update these anytime.</p>
-                  </motion.div>
+                  <>
+                    <motion.div
+                      variants={CONTENT_ITEM_VARIANTS}
+                      className="border border-[var(--alt-grey)] bg-white/50 p-5"
+                    >
+                      <p className="text-base font-medium">Preferences saved.</p>
+                      <p className="mt-1 text-sm text-[var(--text-grey)]">
+                        You can update these anytime.
+                      </p>
+                    </motion.div>
+
+                    <motion.div variants={CONTENT_ITEM_VARIANTS} className="mt-8">
+                      <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">
+                        Follow along
+                      </p>
+                      <h2 className="mt-2 text-xl font-semibold">
+                        Keep up with the launch on social.
+                      </h2>
+                      <p className="mt-2 max-w-lg text-sm text-[var(--text-grey)]">
+                        We share first looks, seller highlights, and launch updates on Instagram and TikTok first.
+                      </p>
+                      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                        {SOCIAL_LINKS.map((link) => (
+                          <a
+                            key={link.href}
+                            href={link.href}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex min-h-12 w-full items-center justify-center border border-[var(--main-black)] bg-[var(--main-black)] px-5 text-sm font-medium uppercase tracking-[0.08em] text-white transition-opacity hover:opacity-85 sm:w-auto"
+                          >
+                            {link.label}
+                          </a>
+                        ))}
+                      </div>
+                      <a
+                        href={`mailto:${CONTACT_EMAIL}`}
+                        className="mt-4 inline-flex text-sm text-[var(--text-grey)] underline-offset-4 transition-colors hover:text-[var(--main-black)] hover:underline"
+                      >
+                        Contact us
+                      </a>
+                    </motion.div>
+                  </>
                 ) : (
                   <div className="mt-8 space-y-5">
+                    <motion.div variants={CONTENT_ITEM_VARIANTS}>
+                      <h2 className="text-xl font-semibold">Tell us what you&apos;re looking for.</h2>
+                      <p className="mt-2 text-sm text-[var(--text-grey)]">
+                        Optional. 20 seconds. So we show you the right pieces first.
+                      </p>
+                    </motion.div>
 
                     {/* Gender */}
                     <motion.div variants={CONTENT_ITEM_VARIANTS}>

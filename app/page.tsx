@@ -8,20 +8,26 @@ import Image from 'next/image';
 import Link from 'next/link';
 import WaitlistForm from '@/components/WaitlistForm';
 import PostHogPageView from '@/components/PostHogPageView';
-import BackgroundPaperShaders from '@/components/ui/background-paper-shaders';
 import { Accordion01 } from '@/components/ui/accordion-01-1';
 import GlowTiltCard from '@/components/ui/glow-tilt-card';
-import FlyingPosters from '@/components/FlyingPosters';
 import StarBorder from '@/components/ui/star-border';
-import LightRays from '@/components/ui/light-rays';
-import ImageTrail from '@/components/ui/image-trail';
 import StepperForm from '@/components/StepperForm';
-import dynamic from 'next/dynamic';
-const WorldMap = dynamic(() => import('@/components/ui/map').then(m => m.WorldMap), { ssr: false });
 import ProfileCard from '@/components/ui/ProfileCard';
 import logo from '@/public/logo.png';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
+
+type BackgroundPaperShadersType = typeof import('@/components/ui/background-paper-shaders').default;
+type FlyingPostersType = typeof import('@/components/FlyingPosters').default;
+type LightRaysType = typeof import('@/components/ui/light-rays').default;
+type ImageTrailType = typeof import('@/components/ui/image-trail').default;
+type WorldMapType = (typeof import('@/components/ui/map'))['WorldMap'];
+
+const loadBackgroundPaperShaders = () => import('@/components/ui/background-paper-shaders').then((mod) => mod.default);
+const loadFlyingPosters = () => import('@/components/FlyingPosters').then((mod) => mod.default);
+const loadLightRays = () => import('@/components/ui/light-rays').then((mod) => mod.default);
+const loadImageTrail = () => import('@/components/ui/image-trail').then((mod) => mod.default);
+const loadWorldMap = () => import('@/components/ui/map').then((mod) => mod.WorldMap);
 
 const POSTER_IMAGES = [
   'https://cdn.cosmos.so/b973f593-b691-4e3d-a806-b15166d04291?format=jpeg',
@@ -37,6 +43,9 @@ const HERO_TITLE_LINES = [
 
 const FLYING_POSTERS_FADE_MASK =
   'linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.92) 16%, #000 34%, #000 62%, rgba(0, 0, 0, 0.78) 76%, rgba(0, 0, 0, 0.28) 92%, transparent 100%)';
+const HERO_TO_SOCIAL_PROOF_GRADIENT =
+  'linear-gradient(to bottom, rgba(238, 238, 238, 0) 0%, rgba(238, 238, 238, 0.08) 18%, rgba(238, 238, 238, 0.32) 42%, rgba(238, 238, 238, 0.72) 74%, var(--body-background) 100%)';
+const INTRO_OVERLAY_HOLD_MS = 320;
 
 const PAIN_POINTS = [
   {
@@ -310,46 +319,105 @@ function useIsMobile() {
   return isMobile;
 }
 
+function useDeferredMount<T extends HTMLElement>(rootMargin = '320px') {
+  const ref = useRef<T>(null);
+  const [shouldMount, setShouldMount] = useState(false);
+
+  useEffect(() => {
+    if (shouldMount) return;
+
+    const node = ref.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setShouldMount(true);
+        observer.disconnect();
+      },
+      { rootMargin }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [rootMargin, shouldMount]);
+
+  return [ref, shouldMount] as const;
+}
+
+function useLazyClientComponent<T>(load: () => Promise<T>, enabled: boolean) {
+  const [component, setComponent] = useState<T | null>(null);
+
+  useEffect(() => {
+    if (!enabled || component) return;
+
+    let cancelled = false;
+
+    load().then((loaded) => {
+      if (cancelled) return;
+      setComponent(() => loaded);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled, load, component]);
+
+  return component;
+}
+
 export default function Home() {
   const isMobile = useIsMobile();
   const pageRef = useRef<HTMLElement>(null);
-  const introOverlayRef = useRef<HTMLDivElement>(null);
-  const introTextRef = useRef<HTMLParagraphElement>(null);
-  const contentShellRef = useRef<HTMLDivElement>(null);
-  const heroBackgroundRef = useRef<HTMLDivElement>(null);
+  const [showHeroShader, setShowHeroShader] = useState(false);
+  const [isIntroComplete, setIsIntroComplete] = useState(false);
+  const [benefitsVisualRef, showBenefitsVisuals] = useDeferredMount<HTMLElement>('340px');
+  const [stepsVisualRef, showStepsVisuals] = useDeferredMount<HTMLElement>('340px');
+  const [footerVisualRef, showFooterVisuals] = useDeferredMount<HTMLElement>('340px');
+  const BackgroundPaperShadersComponent =
+    useLazyClientComponent<BackgroundPaperShadersType>(loadBackgroundPaperShaders, showHeroShader);
+  const FlyingPostersComponent =
+    useLazyClientComponent<FlyingPostersType>(loadFlyingPosters, showStepsVisuals);
+  const LightRaysComponent =
+    useLazyClientComponent<LightRaysType>(loadLightRays, showBenefitsVisuals);
+  const ImageTrailComponent =
+    useLazyClientComponent<ImageTrailType>(loadImageTrail, showBenefitsVisuals && !isMobile);
+  const WorldMapComponent =
+    useLazyClientComponent<WorldMapType>(loadWorldMap, showFooterVisuals);
 
-  useGSAP(
-    () => {
-      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      setShowHeroShader(true);
+      setIsIntroComplete(true);
+      return;
+    }
 
-      if (prefersReducedMotion) {
-        gsap.set([heroBackgroundRef.current, contentShellRef.current], { autoAlpha: 1 });
-        gsap.set(introOverlayRef.current, { autoAlpha: 0 });
-        return;
-      }
+    let rafA = 0;
+    let rafB = 0;
+    let revealTimeout = 0;
 
-      const entryTimeline = gsap.timeline({
-        defaults: { ease: 'power2.out' },
+    rafA = window.requestAnimationFrame(() => {
+      rafB = window.requestAnimationFrame(() => {
+        setShowHeroShader(true);
+        revealTimeout = window.setTimeout(() => {
+          setIsIntroComplete(true);
+        }, INTRO_OVERLAY_HOLD_MS);
       });
+    });
 
-      gsap.set(heroBackgroundRef.current, { autoAlpha: 0 });
-      gsap.set(contentShellRef.current, { autoAlpha: 0 });
-      gsap.set(introTextRef.current, { autoAlpha: 0, y: 12 });
-
-      entryTimeline
-        .to(introTextRef.current, { autoAlpha: 1, y: 0, duration: 0.32, delay: 0.04 })
-        .to(introTextRef.current, { autoAlpha: 0, y: -10, duration: 0.22, delay: 0.16 })
-        .to(heroBackgroundRef.current, { autoAlpha: 1, duration: 0.62 }, '-=0.08')
-        .to(contentShellRef.current, { autoAlpha: 1, duration: 0.52 }, '<')
-        .to(introOverlayRef.current, { autoAlpha: 0, duration: 0.4 }, '-=0.26');
-    },
-    { scope: pageRef }
-  );
+    return () => {
+      window.cancelAnimationFrame(rafA);
+      window.cancelAnimationFrame(rafB);
+      window.clearTimeout(revealTimeout);
+    };
+  }, []);
 
   useGSAP(
     () => {
       const page = pageRef.current;
       if (!page) return;
+      if (!isIntroComplete) return;
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
       const heroLogo = page.querySelector<HTMLElement>('[data-hero-logo]');
@@ -360,7 +428,7 @@ export default function Home() {
 
       const heroTimeline = gsap.timeline({
         defaults: { ease: 'power3.out' },
-        delay: 0.48,
+        delay: 0.12,
       });
 
       if (heroLogo) {
@@ -418,29 +486,40 @@ export default function Home() {
       Array.from(page.querySelectorAll<HTMLElement>('[data-reveal-group="steps"]')).forEach(animateStepsSection);
       Array.from(page.querySelectorAll<HTMLElement>('[data-reveal-group="footer-cta"]')).forEach(animateFooterSection);
     },
-    { scope: pageRef, dependencies: [isMobile], revertOnUpdate: true }
+    { scope: pageRef, dependencies: [isMobile, isIntroComplete], revertOnUpdate: true }
   );
 
   return (
     <main ref={pageRef} className="min-h-screen bg-[var(--body-background)] text-[var(--main-black)]">
       <PostHogPageView />
       <div
-        ref={introOverlayRef}
-        className="fixed inset-0 z-[80] flex items-center justify-center bg-[#f5f3ee] px-6 text-center"
+        className={`fixed inset-0 z-[80] flex items-center justify-center bg-[#f5f3ee] px-6 text-center transition-opacity duration-350 ease-out ${
+          isIntroComplete ? 'pointer-events-none opacity-0' : 'opacity-100'
+        }`}
       >
         <p
-          ref={introTextRef}
-          className="max-w-sm text-base font-medium tracking-[-0.02em] text-[var(--main-black)] md:text-lg"
+          className={`max-w-sm text-base font-medium tracking-[-0.02em] text-[var(--main-black)] transition-all duration-300 ease-out md:text-lg ${
+            isIntroComplete ? '-translate-y-2 opacity-0' : 'translate-y-0 opacity-100'
+          }`}
         >
-          Hello, we are glad you arrive there.
+          Hello, we are glad you arrived here.
         </p>
       </div>
-      <div ref={contentShellRef}>
+      <div
+        className={`transition-opacity duration-500 ease-out ${
+          isIntroComplete ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+        }`}
+      >
 
       {/* Hero */}
       <section id="hero-form" className="relative w-full min-h-[100svh] overflow-hidden">
-        <div ref={heroBackgroundRef} className="absolute inset-0">
-          <BackgroundPaperShaders />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_42%_18%,rgba(64,64,64,0.9)_0%,rgba(26,26,26,0.96)_44%,rgba(0,0,0,1)_100%)]" />
+        <div
+          className={`absolute inset-0 transition-opacity duration-500 ease-out ${
+            showHeroShader ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          {BackgroundPaperShadersComponent ? <BackgroundPaperShadersComponent /> : null}
           <div
             className="pointer-events-none absolute inset-0 z-[1]"
             style={{
@@ -448,6 +527,10 @@ export default function Home() {
             }}
           />
         </div>
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-40 md:h-52"
+          style={{ background: HERO_TO_SOCIAL_PROOF_GRADIENT }}
+        />
 
         <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-6 pt-6 pb-8">
           <header data-hero-logo className="flex shrink-0 items-center justify-center">
@@ -484,8 +567,8 @@ export default function Home() {
       </section>
 
       {/* Social proof */}
-      <section className="relative w-full overflow-hidden" data-reveal-group="soft">
-        <div className="mx-auto max-w-5xl px-6 pt-10 pb-24 text-center">
+      <section className="relative z-10 -mt-24 w-full overflow-hidden md:-mt-28" data-reveal-group="soft">
+        <div className="relative mx-auto max-w-5xl px-6 pt-32 pb-24 text-center md:pt-36">
           <p data-reveal-item className="text-lg font-medium">Join 1,000+ luxury fashion collectors who&apos;ve secured their early access.</p>
           <p data-reveal-item className="mt-2 text-sm text-[var(--text-grey)] hidden md:block">
             56k+ community · 172 designers · Selected professional sellers
@@ -527,23 +610,27 @@ export default function Home() {
       </section>
 
       {/* Benefits */}
-      <section id="benefits" className="relative w-full bg-[var(--main-black)] overflow-hidden">
+      <section id="benefits" ref={benefitsVisualRef} className="relative w-full bg-[var(--main-black)] overflow-hidden">
         {/* ImageTrail — desktop only, pointer-events-none so content stays clickable */}
-        <div className="hidden md:block absolute inset-0 z-20">
-          <ImageTrail items={POSTER_IMAGES} />
-        </div>
-        <div className="absolute inset-0">
-          <LightRays
-            raysOrigin="top-center"
-            raysColor="#ffffff"
-            raysSpeed={0.6}
-            lightSpread={1.4}
-            rayLength={2.5}
-            fadeDistance={0.9}
-            saturation={0.3}
-            mouseInfluence={0.08}
-          />
-        </div>
+        {showBenefitsVisuals && ImageTrailComponent ? (
+          <div className="hidden md:block absolute inset-0 z-20">
+            <ImageTrailComponent items={POSTER_IMAGES} />
+          </div>
+        ) : null}
+        {showBenefitsVisuals && LightRaysComponent ? (
+          <div className="absolute inset-0">
+            <LightRaysComponent
+              raysOrigin="top-center"
+              raysColor="#ffffff"
+              raysSpeed={0.6}
+              lightSpread={1.4}
+              rayLength={2.5}
+              fadeDistance={0.9}
+              saturation={0.3}
+              mouseInfluence={0.08}
+            />
+          </div>
+        ) : null}
         <div className="relative z-30 mx-auto max-w-5xl px-6 py-44" data-reveal-group="feature-grid">
           <h2 data-reveal-heading className="text-2xl font-semibold text-white">What Various Archives brings you</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
@@ -561,9 +648,9 @@ export default function Home() {
       </section>
 
       {/* Steps + Flying Posters */}
-      <section className="relative mx-auto w-full max-w-5xl overflow-hidden" data-reveal-group="steps">
+      <section ref={stepsVisualRef} className="relative mx-auto w-full max-w-5xl overflow-hidden" data-reveal-group="steps">
         {/* Mobile: FlyingPosters as background */}
-        {isMobile && (
+        {isMobile && showStepsVisuals && (
           <div
             data-reveal-media
             className="absolute top-0 bottom-0 opacity-60"
@@ -574,18 +661,20 @@ export default function Home() {
               WebkitMaskImage: FLYING_POSTERS_FADE_MASK,
             }}
           >
-            <FlyingPosters
-              items={POSTER_IMAGES}
-              planeWidth={220}
-              planeHeight={280}
-              distortion={3}
-              scrollEase={0.05}
-              cameraFov={45}
-              cameraZ={20}
-              autoScrollSpeed={-0.01}
-              bleed={90}
-              disableInteraction
-            />
+            {FlyingPostersComponent ? (
+              <FlyingPostersComponent
+                items={POSTER_IMAGES}
+                planeWidth={220}
+                planeHeight={280}
+                distortion={3}
+                scrollEase={0.05}
+                cameraFov={45}
+                cameraZ={20}
+                autoScrollSpeed={-0.01}
+                bleed={90}
+                disableInteraction
+              />
+            ) : null}
           </div>
         )}
 
@@ -634,17 +723,19 @@ export default function Home() {
                   WebkitMaskImage: FLYING_POSTERS_FADE_MASK,
                 }}
               >
-                <FlyingPosters
-                  items={POSTER_IMAGES}
-                  planeWidth={220}
-                  planeHeight={280}
-                  distortion={3}
-                  scrollEase={0.05}
-                  cameraFov={45}
-                  cameraZ={20}
-                  autoScrollSpeed={-0.01}
-                  bleed={90}
-                />
+                {showStepsVisuals && FlyingPostersComponent ? (
+                  <FlyingPostersComponent
+                    items={POSTER_IMAGES}
+                    planeWidth={220}
+                    planeHeight={280}
+                    distortion={3}
+                    scrollEase={0.05}
+                    cameraFov={45}
+                    cameraZ={20}
+                    autoScrollSpeed={-0.01}
+                    bleed={90}
+                  />
+                ) : null}
               </div>
 
               {/* Step 2 — right, row 2 */}
@@ -678,18 +769,20 @@ export default function Home() {
       </section>
 
       {/* Final CTA + Footer */}
-      <section id="footer-form" className="relative w-full bg-[var(--main-black)] overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <WorldMap
-            dots={FOOTER_MAP_DOTS}
-            lineColor="#e8e8e8"
-            showLabels={false}
-            animationDuration={2.4}
-            loop
-            interactive={false}
-            className="h-full w-full rounded-none bg-transparent dark:bg-transparent aspect-auto opacity-50"
-          />
-        </div>
+      <section id="footer-form" ref={footerVisualRef} className="relative w-full bg-[var(--main-black)] overflow-hidden">
+        {showFooterVisuals && WorldMapComponent ? (
+          <div className="absolute inset-0 pointer-events-none">
+            <WorldMapComponent
+              dots={FOOTER_MAP_DOTS}
+              lineColor="#e8e8e8"
+              showLabels={false}
+              animationDuration={2.4}
+              loop
+              interactive={false}
+              className="h-full w-full rounded-none bg-transparent dark:bg-transparent aspect-auto opacity-50"
+            />
+          </div>
+        ) : null}
         <div className="absolute inset-0 bg-[var(--main-black)]/60 md:bg-[var(--main-black)]/72 pointer-events-none" />
 
         <div className="relative z-10 mx-auto flex min-h-[760px] max-w-6xl items-center px-12 py-32 md:min-h-[820px] md:py-28" data-reveal-group="footer-cta">
