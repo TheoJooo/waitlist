@@ -1,6 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useGSAP } from '@gsap/react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Image from 'next/image';
 import Link from 'next/link';
 import WaitlistForm from '@/components/WaitlistForm';
@@ -18,10 +21,18 @@ const WorldMap = dynamic(() => import('@/components/ui/map').then(m => m.WorldMa
 import ProfileCard from '@/components/ui/ProfileCard';
 import logo from '@/public/logo.png';
 
+gsap.registerPlugin(ScrollTrigger, useGSAP);
+
 const POSTER_IMAGES = [
   'https://cdn.cosmos.so/b973f593-b691-4e3d-a806-b15166d04291?format=jpeg',
   'https://cdn.cosmos.so/570eced8-0101-48ee-94e2-07ab6f1810e0?format=jpeg',
   '/images/flyingposter-img-1.jpg',
+];
+
+const HERO_TITLE_LINES = [
+  'The World\'s Best Luxury Vintage.',
+  'Curated by Professionals.',
+  'All in One Place.',
 ];
 
 const PAIN_POINTS = [
@@ -133,6 +144,158 @@ const FOOTER_MAP_DOTS = [
   },
 ];
 
+function animateSoftSection(section: HTMLElement) {
+  const items = Array.from(section.querySelectorAll<HTMLElement>('[data-reveal-item]'));
+
+  if (!items.length) return;
+
+  gsap.fromTo(
+    items,
+    { autoAlpha: 0, y: 24 },
+    {
+      autoAlpha: 1,
+      y: 0,
+      duration: 0.72,
+      stagger: 0.1,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: section,
+        start: 'top 82%',
+        once: true,
+      },
+    }
+  );
+}
+
+function animateFeatureGrid(section: HTMLElement) {
+  const heading = section.querySelector<HTMLElement>('[data-reveal-heading]');
+  const cards = Array.from(section.querySelectorAll<HTMLElement>('[data-reveal-card]'));
+  const cta = section.querySelector<HTMLElement>('[data-reveal-cta]');
+
+  if (!heading && !cards.length && !cta) return;
+
+  const timeline = gsap.timeline({
+    defaults: { ease: 'power3.out' },
+    scrollTrigger: {
+      trigger: section,
+      start: 'top 76%',
+      once: true,
+    },
+  });
+
+  if (heading) {
+    timeline.fromTo(
+      heading,
+      { autoAlpha: 0, y: 28 },
+      { autoAlpha: 1, y: 0, duration: 0.82 }
+    );
+  }
+
+  if (cards.length) {
+    timeline.fromTo(
+      cards,
+      { autoAlpha: 0, y: 36 },
+      {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.84,
+        stagger: 0.12,
+      },
+      heading ? '-=0.42' : 0
+    );
+  }
+
+  if (cta) {
+    timeline.fromTo(
+      cta,
+      { autoAlpha: 0, y: 18 },
+      { autoAlpha: 1, y: 0, duration: 0.68 },
+      cards.length || heading ? '-=0.34' : 0
+    );
+  }
+}
+
+function animateStepsSection(section: HTMLElement) {
+  const heading = section.querySelector<HTMLElement>('[data-reveal-heading]');
+  const media = section.querySelector<HTMLElement>('[data-reveal-media]');
+  const cards = Array.from(section.querySelectorAll<HTMLElement>('[data-reveal-card]'));
+
+  if (!heading && !media && !cards.length) return;
+
+  const timeline = gsap.timeline({
+    defaults: { ease: 'power3.out' },
+    scrollTrigger: {
+      trigger: section,
+      start: 'top 74%',
+      once: true,
+    },
+  });
+
+  if (heading) {
+    timeline.fromTo(
+      heading,
+      { autoAlpha: 0, y: 26 },
+      { autoAlpha: 1, y: 0, duration: 0.78 }
+    );
+  }
+
+  if (media) {
+    timeline.fromTo(
+      media,
+      { autoAlpha: 0, scale: 0.965 },
+      { autoAlpha: 1, scale: 1, duration: 0.92, ease: 'power2.out' },
+      heading ? '-=0.34' : 0
+    );
+  }
+
+  if (cards.length) {
+    timeline.fromTo(
+      cards,
+      { autoAlpha: 0, y: 28 },
+      {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.78,
+        stagger: 0.11,
+      },
+      media ? '-=0.52' : heading ? '-=0.28' : 0
+    );
+  }
+}
+
+function animateFooterSection(section: HTMLElement) {
+  const visual = section.querySelector<HTMLElement>('[data-reveal-visual]');
+  const content = section.querySelector<HTMLElement>('[data-reveal-content]');
+
+  if (!visual && !content) return;
+
+  const timeline = gsap.timeline({
+    defaults: { ease: 'power3.out' },
+    scrollTrigger: {
+      trigger: section,
+      start: 'top 75%',
+      once: true,
+    },
+  });
+
+  if (visual) {
+    timeline.fromTo(
+      visual,
+      { autoAlpha: 0, x: -42, y: 24 },
+      { autoAlpha: 1, x: 0, y: 0, duration: 0.9 }
+    );
+  }
+
+  if (content) {
+    timeline.fromTo(
+      content,
+      { autoAlpha: 0, x: 42, y: 24 },
+      { autoAlpha: 1, x: 0, y: 0, duration: 0.9 },
+      visual ? '-=0.66' : 0
+    );
+  }
+}
+
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -146,8 +309,84 @@ function useIsMobile() {
 
 export default function Home() {
   const isMobile = useIsMobile();
+  const pageRef = useRef<HTMLElement>(null);
+
+  useGSAP(
+    () => {
+      const page = pageRef.current;
+      if (!page) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const heroLogo = page.querySelector<HTMLElement>('[data-hero-logo]');
+      const heroEyebrow = page.querySelector<HTMLElement>('[data-hero-eyebrow]');
+      const heroLines = Array.from(page.querySelectorAll<HTMLElement>('[data-hero-line]'));
+      const heroCopy = page.querySelector<HTMLElement>('[data-hero-copy]');
+      const heroCard = page.querySelector<HTMLElement>('[data-hero-card]');
+
+      const heroTimeline = gsap.timeline({
+        defaults: { ease: 'power3.out' },
+      });
+
+      if (heroLogo) {
+        heroTimeline.fromTo(
+          heroLogo,
+          { autoAlpha: 0, y: -16 },
+          { autoAlpha: 1, y: 0, duration: 0.55 }
+        );
+      }
+
+      if (heroEyebrow) {
+        heroTimeline.fromTo(
+          heroEyebrow,
+          { autoAlpha: 0, y: 18 },
+          { autoAlpha: 1, y: 0, duration: 0.55 },
+          heroLogo ? '-=0.24' : 0
+        );
+      }
+
+      if (heroLines.length) {
+        heroTimeline.fromTo(
+          heroLines,
+          { autoAlpha: 0, yPercent: 115 },
+          {
+            autoAlpha: 1,
+            yPercent: 0,
+            duration: 1.02,
+            stagger: 0.12,
+            ease: 'power4.out',
+          },
+          heroEyebrow || heroLogo ? '-=0.16' : 0
+        );
+      }
+
+      if (heroCopy) {
+        heroTimeline.fromTo(
+          heroCopy,
+          { autoAlpha: 0, y: 24 },
+          { autoAlpha: 1, y: 0, duration: 0.7 },
+          heroLines.length ? '-=0.58' : 0
+        );
+      }
+
+      if (heroCard) {
+        heroTimeline.fromTo(
+          heroCard,
+          { autoAlpha: 0, y: 48, rotateX: 8, transformPerspective: 1200, transformOrigin: '50% 0%' },
+          { autoAlpha: 1, y: 0, rotateX: 0, duration: 1.02 },
+          heroCopy || heroLines.length ? '-=0.66' : 0
+        );
+      }
+
+      Array.from(page.querySelectorAll<HTMLElement>('[data-reveal-group="soft"]')).forEach(animateSoftSection);
+      Array.from(page.querySelectorAll<HTMLElement>('[data-reveal-group="feature-grid"]')).forEach(animateFeatureGrid);
+      Array.from(page.querySelectorAll<HTMLElement>('[data-reveal-group="steps"]')).forEach(animateStepsSection);
+      Array.from(page.querySelectorAll<HTMLElement>('[data-reveal-group="footer-cta"]')).forEach(animateFooterSection);
+    },
+    { scope: pageRef, dependencies: [isMobile], revertOnUpdate: true }
+  );
+
   return (
-    <main className="min-h-screen bg-[var(--body-background)] text-[var(--main-black)]">
+    <main ref={pageRef} className="min-h-screen bg-[var(--body-background)] text-[var(--main-black)]">
       <PostHogPageView />
 
       {/* Hero */}
@@ -161,37 +400,45 @@ export default function Home() {
         />
 
         <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-5xl flex-col px-6 pt-4 md:pt-6 pb-8">
-          <header className="flex items-center justify-center md:justify-start">
+          <header data-hero-logo className="flex items-center justify-center md:justify-start">
             <Image src={logo} alt="Various Archives logo" width={160} height={36} priority />
           </header>
 
           <div className="grid flex-1 items-center gap-10 pb-12 mt-10 md:mt-0 md:grid-cols-2">
             <div>
-              <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Early Access Waitlist</p>
+              <p data-hero-eyebrow className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Early Access Waitlist</p>
               <h1 className="mt-3 text-3xl font-semibold leading-thin text-[var(--text-white)]">
-                The World&apos;s Best Luxury Vintage.<br />Curated by Professionals.<br />All in One Place.
+                {HERO_TITLE_LINES.map((line) => (
+                  <span key={line} className="block overflow-hidden">
+                    <span data-hero-line className="block">
+                      {line}
+                    </span>
+                  </span>
+                ))}
               </h1>
-              <p className="mt-6 max-w-xl text-base leading-relaxed text-[var(--alt-grey)]">
+              <p data-hero-copy className="mt-6 max-w-xl text-base leading-relaxed text-[var(--alt-grey)]">
                 Various Archives connects you with vintage designer pieces from trusted boutiques worldwide.<br />
                 Skip the noise. Discover what matters.
               </p>
             </div>
 
-            <GlowTiltCard className="px-8 py-8 translate-y-5">
-              <WaitlistForm location="hero" />
-            </GlowTiltCard>
+            <div data-hero-card>
+              <GlowTiltCard className="px-8 py-8 translate-y-5">
+                <WaitlistForm location="hero" />
+              </GlowTiltCard>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Social proof */}
-      <section className="relative w-full overflow-hidden">
+      <section className="relative w-full overflow-hidden" data-reveal-group="soft">
         <div className="mx-auto max-w-5xl px-6 pt-10 pb-24 text-center">
-          <p className="text-lg font-medium">Join 1,000+ luxury fashion collectors who&apos;ve secured their early access.</p>
-          <p className="mt-2 text-sm text-[var(--text-grey)] hidden md:block">
+          <p data-reveal-item className="text-lg font-medium">Join 1,000+ luxury fashion collectors who&apos;ve secured their early access.</p>
+          <p data-reveal-item className="mt-2 text-sm text-[var(--text-grey)] hidden md:block">
             56k+ community · 172 designers · Selected professional sellers
           </p>
-          <div className="mt-2 flex flex-col gap-1 md:hidden">
+          <div data-reveal-item className="mt-2 flex flex-col gap-1 md:hidden">
             <p className="text-sm text-[var(--text-grey)]">56k+ community · 172 designers</p>
             <p className="text-sm text-[var(--text-grey)]">Selected professional sellers</p>
           </div>
@@ -201,18 +448,18 @@ export default function Home() {
 
       {/* Pain points */}
       <section className="relative w-full bg-white overflow-hidden">
-        <div className="mx-auto max-w-5xl md:border-t md:border-[var(--outline)] px-6 py-32">
-          <h2 className="text-2xl font-semibold px-4 md:px-0">The problem with luxury vintage today</h2>
+        <div className="mx-auto max-w-5xl md:border-t md:border-[var(--outline)] px-6 py-32" data-reveal-group="feature-grid">
+          <h2 data-reveal-heading className="text-2xl font-semibold px-4 md:px-0">The problem with luxury vintage today</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             {PAIN_POINTS.map((item) => (
-              <article key={item.number} className="p-4">
+              <article key={item.number} data-reveal-card className="p-4">
                 <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">{item.number}</p>
                 <h3 className="mt-2 text-lg font-medium">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--text-grey)]">{item.description}</p>
               </article>
             ))}
           </div>
-          <div className="mt-16 md:mt-8 flex justify-center">
+          <div data-reveal-cta className="mt-16 md:mt-8 flex justify-center">
             <StarBorder
               as="button"
               type="button"
@@ -245,27 +492,28 @@ export default function Home() {
             mouseInfluence={0.08}
           />
         </div>
-        <div className="relative z-30 mx-auto max-w-5xl px-6 py-44">
-          <h2 className="text-2xl font-semibold text-white">What Various Archives brings you</h2>
+        <div className="relative z-30 mx-auto max-w-5xl px-6 py-44" data-reveal-group="feature-grid">
+          <h2 data-reveal-heading className="text-2xl font-semibold text-white">What Various Archives brings you</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             {BENEFITS.map((benefit) => (
-              <article key={benefit.title} className="border border-white/10 bg-black/20 backdrop-blur-md px-4 pt-4 pb-6">
+              <article key={benefit.title} data-reveal-card className="border border-white/10 bg-black/20 backdrop-blur-md px-4 pt-4 pb-6">
                 <h3 className="text-lg font-medium text-white">{benefit.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-neutral-300">{benefit.description}</p>
               </article>
             ))}
           </div>
-          <div className="mt-8 border-t border-white/10 pt-8 flex flex-col items-center">
+          <div data-reveal-cta className="mt-8 border-t border-white/10 pt-8 flex flex-col items-center">
             <StepperForm location="benefits" />
           </div>
         </div>
       </section>
 
       {/* Steps + Flying Posters */}
-      <section className="relative mx-auto w-full max-w-5xl overflow-hidden">
+      <section className="relative mx-auto w-full max-w-5xl overflow-hidden" data-reveal-group="steps">
         {/* Mobile: FlyingPosters as background */}
         {isMobile && (
           <div
+            data-reveal-media
             className="absolute top-0 bottom-0 opacity-60"
             style={{
               width: '100vw',
@@ -288,23 +536,23 @@ export default function Home() {
         )}
 
         <div className="relative z-10 px-6 py-32">
-          <h2 className="text-2xl font-semibold">What happens next</h2>
+          <h2 data-reveal-heading className="text-2xl font-semibold">What happens next</h2>
 
           {/* Mobile: stacked */}
           <ol className="mt-5 grid gap-4 md:hidden">
-            <li className="border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4" onClick={() => document.getElementById('footer-form')?.scrollIntoView({ behavior: 'smooth' })}>
+            <li data-reveal-card className="border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4" onClick={() => document.getElementById('footer-form')?.scrollIntoView({ behavior: 'smooth' })}>
               <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 1</p>
               <h3 className="mt-2 text-lg font-medium">Sign up</h3>
               <p className="mt-2 text-sm text-[var(--text-grey)]">Enter your email and you&apos;re on the list.</p>
             </li>
-            <li className="border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4">
+            <li data-reveal-card className="border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4">
               <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 2</p>
               <h3 className="mt-2 text-lg font-medium">Get early updates</h3>
               <p className="mt-2 text-sm text-[var(--text-grey)]">
                 We&apos;ll share progress, new sellers, and first looks before anyone else.
               </p>
             </li>
-            <li className="border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4">
+            <li data-reveal-card className="border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4">
               <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 3</p>
               <h3 className="mt-2 text-lg font-medium">Shop first</h3>
               <p className="mt-2 text-sm text-[var(--text-grey)]">
@@ -317,7 +565,7 @@ export default function Home() {
           {!isMobile && (
             <div className="mt-8 grid grid-cols-[1fr_220px_1fr] grid-rows-3 gap-x-16 gap-y-8 h-[480px]">
               {/* Step 1 — left, row 1 */}
-              <article className="col-start-1 row-start-1 self-center border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4" onClick={() => document.getElementById('footer-form')?.scrollIntoView({ behavior: 'smooth' })}>
+              <article data-reveal-card className="col-start-1 row-start-1 self-center border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4" onClick={() => document.getElementById('footer-form')?.scrollIntoView({ behavior: 'smooth' })}>
                 <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 1</p>
                 <h3 className="mt-2 text-lg font-medium">Sign up</h3>
                 <p className="mt-2 text-sm text-[var(--text-grey)]">Enter your email and you&apos;re on the list.</p>
@@ -325,6 +573,7 @@ export default function Home() {
 
               {/* FlyingPosters — center, all 3 rows */}
               <div
+                data-reveal-media
                 className="col-start-2 row-start-1 row-span-3 h-full"
                 style={{ maskImage: 'linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%)' }}
               >
@@ -341,7 +590,7 @@ export default function Home() {
               </div>
 
               {/* Step 2 — right, row 2 */}
-              <article className="col-start-3 row-start-2 self-center border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4">
+              <article data-reveal-card className="col-start-3 row-start-2 self-center border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4">
                 <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 2</p>
                 <h3 className="mt-2 text-lg font-medium">Get early updates</h3>
                 <p className="mt-2 text-sm text-[var(--text-grey)]">
@@ -350,7 +599,7 @@ export default function Home() {
               </article>
 
               {/* Step 3 — left, row 3 */}
-              <article className="col-start-1 row-start-3 self-center border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4">
+              <article data-reveal-card className="col-start-1 row-start-3 self-center border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4">
                 <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 3</p>
                 <h3 className="mt-2 text-lg font-medium">Shop first</h3>
                 <p className="mt-2 text-sm text-[var(--text-grey)]">
@@ -358,14 +607,14 @@ export default function Home() {
                 </p>
               </article>
             </div>
-          )}
+      )}
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="mx-auto w-full max-w-5xl md:border-t md:border-[var(--outline)] px-6 py-32">
-        <h2 className="text-2xl font-semibold">Good to know</h2>
-        <div className="mt-5">
+      <section className="mx-auto w-full max-w-5xl md:border-t md:border-[var(--outline)] px-6 py-32" data-reveal-group="soft">
+        <h2 data-reveal-item className="text-2xl font-semibold">Good to know</h2>
+        <div data-reveal-item className="mt-5">
           <Accordion01 items={FAQ_ITEMS} />
         </div>
       </section>
@@ -385,9 +634,9 @@ export default function Home() {
         </div>
         <div className="absolute inset-0 bg-[var(--main-black)]/60 md:bg-[var(--main-black)]/72 pointer-events-none" />
 
-        <div className="relative z-10 mx-auto flex min-h-[760px] max-w-6xl items-center px-12 py-32 md:min-h-[820px] md:py-28">
+        <div className="relative z-10 mx-auto flex min-h-[760px] max-w-6xl items-center px-12 py-32 md:min-h-[820px] md:py-28" data-reveal-group="footer-cta">
           <div className="grid w-full gap-16 md:grid-cols-2 md:items-center">
-            <div className="flex justify-center md:justify-end md:items-center order-first md:order-none">
+            <div data-reveal-visual className="flex justify-center md:justify-end md:items-center order-first md:order-none">
               <ProfileCard
                 name="Various Archives"
                 title="Vintage Curator"
@@ -399,7 +648,7 @@ export default function Home() {
               />
             </div>
 
-            <div className="flex flex-col items-center text-center md:items-start md:text-left">
+            <div data-reveal-content className="flex flex-col items-center text-center md:items-start md:text-left">
               <h2 className="text-3xl font-semibold text-white">Don&apos;t miss the opening.</h2>
               <p className="mt-3 text-[var(--alt-grey)]">Early access is limited to the waitlist.<br/>Free, takes 10 seconds.</p>
               <div className="mt-10 flex w-full max-w-lg justify-center md:justify-start">
@@ -409,8 +658,8 @@ export default function Home() {
           </div>
         </div>
 
-        <footer className="relative z-10 border-t border-white/10 px-6 py-8 text-sm text-center">
-          <div className="flex justify-center gap-5 mb-3">
+        <footer className="relative z-10 border-t border-white/10 px-6 py-8 text-sm text-center" data-reveal-group="soft">
+          <div data-reveal-item className="flex justify-center gap-5 mb-3">
             <a
               href="https://instagram.com/various.archives"
               target="_blank"
@@ -428,7 +677,7 @@ export default function Home() {
               TikTok
             </a>
           </div>
-          <p className="text-white/30">
+          <p data-reveal-item className="text-white/30">
             © 2026 Various Archives ·{' '}
             <Link href="/privacy" target="_blank" rel="noreferrer" className="hover:text-white/50 transition-colors">Privacy Policy</Link>
             {' '}·{' '}
