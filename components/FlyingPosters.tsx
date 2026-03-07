@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, type CSSProperties } from 'react';
 import { Renderer, Camera, Transform, Plane, Program, Mesh, Texture, type OGLRenderingContext } from 'ogl';
 
 type GL = OGLRenderingContext;
@@ -534,6 +534,7 @@ interface FlyingPostersProps extends React.HTMLAttributes<HTMLDivElement> {
   cameraZ?: number;
   autoScrollSpeed?: number;
   disableInteraction?: boolean;
+  bleed?: number;
 }
 
 export default function FlyingPosters({
@@ -546,7 +547,9 @@ export default function FlyingPosters({
   cameraZ = 20,
   autoScrollSpeed = 0,
   disableInteraction = false,
+  bleed = 0,
   className,
+  style,
   ...props
 }: FlyingPostersProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -602,7 +605,18 @@ export default function FlyingPosters({
   }, [disableInteraction]);
 
   return (
-    <div ref={containerRef} className={`w-full h-full overflow-hidden relative z-2 ${className}`} {...props}>
+    <div
+      ref={containerRef}
+      className={`relative z-2 w-full overflow-hidden ${className}`}
+      style={
+        {
+          ...(style ?? {}),
+          height: `calc(100% + ${bleed * 2}px)`,
+          marginTop: `${bleed * -1}px`,
+        } as CSSProperties
+      }
+      {...props}
+    >
       <canvas ref={canvasRef} className="block w-full h-full" />
     </div>
   );

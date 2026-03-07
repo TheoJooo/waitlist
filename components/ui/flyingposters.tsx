@@ -393,7 +393,7 @@ class Canvas {
       canvas: this.canvas,
       alpha: true,
       antialias: true,
-      dpr: Math.min(window.devicePixelRatio, 2)
+      dpr: 1
     });
     this.gl = this.renderer.gl;
   }

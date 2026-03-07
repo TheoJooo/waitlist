@@ -35,6 +35,9 @@ const HERO_TITLE_LINES = [
   'All in One Place.',
 ];
 
+const FLYING_POSTERS_FADE_MASK =
+  'linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.92) 16%, #000 34%, #000 62%, rgba(0, 0, 0, 0.78) 76%, rgba(0, 0, 0, 0.28) 92%, transparent 100%)';
+
 const PAIN_POINTS = [
   {
     number: '1',
@@ -518,7 +521,8 @@ export default function Home() {
             style={{
               width: '100vw',
               left: 'calc(50% - 50vw)',
-              maskImage: 'linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%)',
+              maskImage: FLYING_POSTERS_FADE_MASK,
+              WebkitMaskImage: FLYING_POSTERS_FADE_MASK,
             }}
           >
             <FlyingPosters
@@ -530,6 +534,7 @@ export default function Home() {
               cameraFov={45}
               cameraZ={20}
               autoScrollSpeed={-0.01}
+              bleed={90}
               disableInteraction
             />
           </div>
@@ -575,7 +580,10 @@ export default function Home() {
               <div
                 data-reveal-media
                 className="col-start-2 row-start-1 row-span-3 h-full"
-                style={{ maskImage: 'linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%)' }}
+                style={{
+                  maskImage: FLYING_POSTERS_FADE_MASK,
+                  WebkitMaskImage: FLYING_POSTERS_FADE_MASK,
+                }}
               >
                 <FlyingPosters
                   items={POSTER_IMAGES}
@@ -586,6 +594,7 @@ export default function Home() {
                   cameraFov={45}
                   cameraZ={20}
                   autoScrollSpeed={-0.01}
+                  bleed={90}
                 />
               </div>
 
