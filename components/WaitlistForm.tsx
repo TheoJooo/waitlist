@@ -1,13 +1,12 @@
 'use client';
 
 import { createClient, type PostgrestError } from '@supabase/supabase-js';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { capturePosthogEvent, getUtmFromWindow } from '@/lib/analytics';
 import StarBorder from '@/components/ui/star-border';
 
 const EMAIL_RGX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_RGX = /^[\d+\-().\s]{7,20}$/;
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -16,60 +15,9 @@ const supabase =
 
 type WaitlistFormProps = {
   location: 'hero' | 'mid' | 'footer';
-  variant?: 'compact';
   title?: string;
   buttonLabel?: string;
 };
-
-type FormValues = {
-  fullName: string;
-  email: string;
-  phone: string;
-};
-
-const INITIAL_VALUES: FormValues = {
-  fullName: '',
-  email: '',
-  phone: '',
-};
-
-function buildErrorMessage(error: PostgrestError | null, fallbackMessage?: string) {
-  if (fallbackMessage) return fallbackMessage;
-  if (!error) return 'An error occurred. Please try again later.';
-  if (error.code === '23505') return 'This email is already registered.';
-  return 'An error occurred. Please try again later.';
-}
-
-type FormErrors = {
-  fullName?: string;
-  email?: string;
-  phone?: string;
-  general?: string;
-};
-
-function validateFull(values: FormValues): FormErrors {
-  const errors: FormErrors = {};
-  if (!values.fullName.trim()) errors.fullName = 'Name is required.';
-  if (!EMAIL_RGX.test(values.email.trim())) errors.email = 'Please enter a valid email address.';
-  if (!PHONE_RGX.test(values.phone.trim())) errors.phone = 'Please enter a valid phone number.';
-  return errors;
-}
-
-function validateCompact(values: FormValues): FormErrors {
-  const errors: FormErrors = {};
-  if (!EMAIL_RGX.test(values.email.trim())) errors.email = 'Please enter a valid email address.';
-  return errors;
-}
-
-function splitFullName(fullName: string) {
-  const clean = fullName.trim().replace(/\s+/g, ' ');
-  if (!clean) return { firstName: '', lastName: '' };
-  const [firstName, ...rest] = clean.split(' ');
-  return {
-    firstName,
-    lastName: rest.join(' '),
-  };
-}
 
 async function insertInWaitlist(payload: Record<string, string>) {
   if (!supabase) {
@@ -95,23 +43,20 @@ async function insertInWaitlist(payload: Record<string, string>) {
     return { error: primaryInsert.error, fallbackMessage: '' };
   }
 
-  const fallbackInsert = await supabase
-    .from('waitlist')
-    .insert({ email: payload.email });
-
+  const fallbackInsert = await supabase.from('waitlist').insert({ email: payload.email });
   return { error: fallbackInsert.error, fallbackMessage: '' };
 }
 
-export default function WaitlistForm({ location, variant, title, buttonLabel }: WaitlistFormProps) {
+export default function WaitlistForm({ location, title, buttonLabel }: WaitlistFormProps) {
   const router = useRouter();
-  const [values, setValues] = useState<FormValues>(INITIAL_VALUES);
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [generalError, setGeneralError] = useState('');
   const hasTrackedStart = useRef(false);
-  const isHero = location === 'hero';
-  const isCompact = variant === 'compact';
 
-  const labelClassName = isHero ? 'block space-y-1 text-sm text-neutral-200' : 'block space-y-1 text-sm text-neutral-700';
+  useEffect(() => { router.prefetch('/thank-you'); }, [router]);
+  const isHero = location === 'hero';
+
   const inputClassName = isHero
     ? 'h-11 w-full rounded-none border border-white/45 bg-white/8 px-3 text-neutral-50 caret-white outline-none transition placeholder:text-neutral-400 focus:border-white focus:bg-white/12'
     : 'h-11 w-full rounded-none border border-neutral-300 bg-white px-3 text-black outline-none transition focus:border-black';
@@ -122,175 +67,68 @@ export default function WaitlistForm({ location, variant, title, buttonLabel }: 
   const trackFormStart = () => {
     if (hasTrackedStart.current) return;
     hasTrackedStart.current = true;
-    capturePosthogEvent('waitlist_form_started', {
-      form_location: location,
-      ...getUtmFromWindow(),
-    });
-  };
-
-  const updateField = (field: keyof FormValues, value: string) => {
-    trackFormStart();
-    setValues((prev) => ({ ...prev, [field]: value }));
+    capturePosthogEvent('waitlist_form_started', { form_location: location, ...getUtmFromWindow() });
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setErrors({});
+    setEmailError('');
+    setGeneralError('');
     trackFormStart();
 
-    const validationErrors = isCompact ? validateCompact(values) : validateFull(values);
+    if (!EMAIL_RGX.test(email.trim())) {
+      setEmailError('Please enter a valid email address.');
+      return;
+    }
+
+    const trimmedEmail = email.trim().toLowerCase();
     const utmProperties = getUtmFromWindow();
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      const firstMessage = Object.values(validationErrors)[0] ?? 'Validation error';
-      capturePosthogEvent('waitlist_signup_failed', {
-        form_location: location,
-        error_code: 'validation_error',
-        error_message: firstMessage,
-        ...utmProperties,
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    const nameParts = splitFullName(values.fullName);
-
-    const payload: Record<string, string> = {
-      email: values.email.trim().toLowerCase(),
-      form_location: location,
-      ...utmProperties,
-    };
-
-    if (!isCompact) {
-      payload.first_name = nameParts.firstName;
-      payload.last_name = nameParts.lastName;
-      payload.full_name = values.fullName.trim();
-      payload.phone = values.phone.trim();
-    }
-
-    const { error, fallbackMessage } = await insertInWaitlist(payload);
-
-    if (error || fallbackMessage) {
-      const message = buildErrorMessage(error, fallbackMessage);
-      setErrors({ general: message });
-      capturePosthogEvent('waitlist_signup_failed', {
-        form_location: location,
-        error_code: error?.code ?? (fallbackMessage ? 'missing_env' : 'unknown'),
-        error_message: message,
-        ...utmProperties,
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    capturePosthogEvent('waitlist_signup_submitted', {
-      form_location: location,
-      ...utmProperties,
-    });
-
-    try {
-      sessionStorage.setItem('waitlist_email', values.email.trim().toLowerCase());
-    } catch {}
-
+    try { sessionStorage.setItem('waitlist_email', trimmedEmail); } catch {}
+    capturePosthogEvent('waitlist_signup_submitted', { form_location: location, ...utmProperties });
     router.push('/thank-you');
+
+    insertInWaitlist({ email: trimmedEmail, form_location: location, ...utmProperties });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+    <form onSubmit={handleSubmit} className="space-y-2" noValidate>
       {title ? (
         <h3 className={isHero ? 'text-xl font-semibold tracking-tight text-neutral-100' : 'text-xl font-semibold tracking-tight'}>
           {title}
         </h3>
       ) : null}
 
-      <div className="space-y-3">
-        {!isCompact && (
-          <div>
-            <label className={labelClassName}>
-              <span>Name</span>
-              <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
-                <input
-                  value={values.fullName}
-                  onFocus={trackFormStart}
-                  onChange={(event) => updateField('fullName', event.target.value)}
-                  autoComplete="name"
-                  required
-                  className={inputClassName}
-                />
-              </div>
-            </label>
-            {errors.fullName && <p className={errorClassName}>{errors.fullName}</p>}
-          </div>
-        )}
-        <div>
-          <label className={labelClassName}>
-            {!isCompact && <span>Email</span>}
-            <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
-              <input
-                type="email"
-                value={values.email}
-                onFocus={trackFormStart}
-                onChange={(event) => updateField('email', event.target.value)}
-                autoComplete="email"
-                placeholder={isCompact ? 'Your email' : undefined}
-                required
-                className={inputClassName}
-              />
-            </div>
-          </label>
-          {errors.email && <p className={errorClassName}>{errors.email}</p>}
-        </div>
-        {!isCompact && (
-          <div>
-            <label className={labelClassName}>
-              <span>Phone number</span>
-              <div className="transition-transform duration-200 ease-out hover:scale-[1.01] focus-within:scale-[1.01]">
-                <input
-                  type="tel"
-                  value={values.phone}
-                  onFocus={trackFormStart}
-                  onChange={(event) => updateField('phone', event.target.value)}
-                  autoComplete="tel"
-                  required
-                  className={inputClassName}
-                />
-              </div>
-            </label>
-            {errors.phone && <p className={errorClassName}>{errors.phone}</p>}
-          </div>
-        )}
+      <div>
+        <input
+          type="email"
+          value={email}
+          onFocus={trackFormStart}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
+          placeholder="Your email"
+          required
+          className={inputClassName}
+        />
+        {emailError && <p className={`mt-1 ${errorClassName}`}>{emailError}</p>}
       </div>
 
       <StarBorder
         as="button"
         type="submit"
-        disabled={isSubmitting}
         className="w-full"
         color={buttonEffectColor}
         speed="3.5s"
         thickness={1.5}
       >
-        {isSubmitting ? 'Submitting...' : ctaLabel}
+        {ctaLabel}
       </StarBorder>
 
-      {isCompact ? (
-        <p className={isHero ? 'text-xs text-neutral-400' : 'text-xs text-neutral-500'}>
-          No spam. Unsubscribe anytime.
-        </p>
-      ) : (
-        <>
-          <p className={isHero ? 'text-sm font-semibold text-neutral-100' : 'text-sm font-semibold text-[var(--main-black)]'}>
-            First invites go out soon.
-          </p>
-          <p className={isHero ? 'text-xs text-neutral-400' : 'text-xs text-neutral-600'}>
-            No spam. Unsubscribe anytime.
-          </p>
-        </>
-      )}
+      <p className={isHero ? 'text-xs text-neutral-400 text-center' : 'text-xs text-neutral-600 text-center'}>
+        No spam. Unsubscribe anytime.
+      </p>
 
-      {errors.general && <p className={errorClassName}>{errors.general}</p>}
+      {generalError && <p className={errorClassName}>{generalError}</p>}
     </form>
   );
 }

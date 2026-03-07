@@ -171,14 +171,13 @@ export default function Home() {
               <h1 className="mt-3 text-3xl font-semibold leading-thin text-[var(--text-white)]">
                 The World&apos;s Best Luxury Vintage.<br />Curated by Professionals.<br />All in One Place.
               </h1>
-              <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--alt-grey)]">
+              <p className="mt-6 max-w-xl text-base leading-relaxed text-[var(--alt-grey)]">
                 Various Archives connects you with vintage designer pieces from trusted boutiques worldwide.<br />
-                Skip the noise.<br />
-                Discover what matters.
+                Skip the noise. Discover what matters.
               </p>
             </div>
 
-            <GlowTiltCard className="p-5">
+            <GlowTiltCard className="px-8 py-8 translate-y-5">
               <WaitlistForm location="hero" />
             </GlowTiltCard>
           </div>
@@ -188,13 +187,12 @@ export default function Home() {
       {/* Social proof */}
       <section className="relative w-full overflow-hidden">
         <div className="mx-auto max-w-5xl px-6 pt-10 pb-24 text-center">
-          <p className="text-sm font-medium">Join 1,000+ luxury fashion collectors who&apos;ve secured their early access.</p>
+          <p className="text-lg font-medium">Join 1,000+ luxury fashion collectors who&apos;ve secured their early access.</p>
           <p className="mt-2 text-sm text-[var(--text-grey)] hidden md:block">
             56k+ community · 172 designers · Selected professional sellers
           </p>
           <div className="mt-2 flex flex-col gap-1 md:hidden">
-            <p className="text-sm text-[var(--text-grey)]">56k+ community</p>
-            <p className="text-sm text-[var(--text-grey)]">172 designers</p>
+            <p className="text-sm text-[var(--text-grey)]">56k+ community · 172 designers</p>
             <p className="text-sm text-[var(--text-grey)]">Selected professional sellers</p>
           </div>
         </div>
@@ -214,7 +212,7 @@ export default function Home() {
               </article>
             ))}
           </div>
-          <div className="mt-16 md:mt-8 flex justify-center md:justify-start">
+          <div className="mt-16 md:mt-8 flex justify-center">
             <StarBorder
               as="button"
               type="button"
@@ -258,7 +256,6 @@ export default function Home() {
             ))}
           </div>
           <div className="mt-8 border-t border-white/10 pt-8 flex flex-col items-center">
-            <p className="text-xs uppercase tracking-[0.08em] text-neutral-500 mb-4">Join the waitlist</p>
             <StepperForm location="benefits" />
           </div>
         </div>
@@ -295,7 +292,7 @@ export default function Home() {
 
           {/* Mobile: stacked */}
           <ol className="mt-5 grid gap-4 md:hidden">
-            <li className="border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4">
+            <li className="border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4" onClick={() => document.getElementById('footer-form')?.scrollIntoView({ behavior: 'smooth' })}>
               <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 1</p>
               <h3 className="mt-2 text-lg font-medium">Sign up</h3>
               <p className="mt-2 text-sm text-[var(--text-grey)]">Enter your email and you&apos;re on the list.</p>
@@ -320,7 +317,7 @@ export default function Home() {
           {!isMobile && (
             <div className="mt-8 grid grid-cols-[1fr_220px_1fr] grid-rows-3 gap-x-16 gap-y-8 h-[480px]">
               {/* Step 1 — left, row 1 */}
-              <article className="col-start-1 row-start-1 self-center border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4">
+              <article className="col-start-1 row-start-1 self-center border border-[var(--alt-grey)]/60 bg-white/40 backdrop-blur-md p-4" onClick={() => document.getElementById('footer-form')?.scrollIntoView({ behavior: 'smooth' })}>
                 <p className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Step 1</p>
                 <h3 className="mt-2 text-lg font-medium">Sign up</h3>
                 <p className="mt-2 text-sm text-[var(--text-grey)]">Enter your email and you&apos;re on the list.</p>
@@ -388,18 +385,15 @@ export default function Home() {
         </div>
         <div className="absolute inset-0 bg-[var(--main-black)]/60 md:bg-[var(--main-black)]/72 pointer-events-none" />
 
-        <div className="relative z-10 mx-auto flex min-h-[760px] max-w-5xl items-center px-6 py-32 md:min-h-[820px] md:py-28">
-          <div className="grid gap-8 md:grid-cols-[0.85fr_1.15fr] md:items-center">
-            <div className="hidden md:flex md:justify-center md:items-center">
+        <div className="relative z-10 mx-auto flex min-h-[760px] max-w-6xl items-center px-12 py-32 md:min-h-[820px] md:py-28">
+          <div className="grid w-full gap-16 md:grid-cols-2 md:items-center">
+            <div className="flex justify-center md:justify-end md:items-center order-first md:order-none">
               <ProfileCard
                 name="Various Archives"
                 title="Vintage Curator"
-                handle="various.archives"
-                status="Accepting Waitlist"
-                contactText="Join"
                 avatarUrl=""
                 behindGlowColor="rgba(180, 160, 130, 0.4)"
-                showUserInfo={true}
+                idNumber="VA-####-####"
                 enableMobileTilt={true}
                 mobileTiltSensitivity={6}
               />
@@ -436,7 +430,7 @@ export default function Home() {
           </div>
           <p className="text-white/30">
             © 2026 Various Archives ·{' '}
-            <Link href="/privacy" className="hover:text-white/50 transition-colors">Privacy Policy</Link>
+            <Link href="/privacy" target="_blank" rel="noreferrer" className="hover:text-white/50 transition-colors">Privacy Policy</Link>
             {' '}·{' '}
             <a href="mailto:contact@various-archives.com" className="hover:text-white/50 transition-colors">Contact</a>
           </p>
