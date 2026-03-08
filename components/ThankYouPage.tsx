@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { capturePosthogEvent, identifyPosthogUser } from '@/lib/analytics';
 import { saveWaitlistPreferences } from '@/lib/waitlist-api';
 import StarBorder from '@/components/ui/star-border';
 import SplitText from '@/components/ui/SplitText';
@@ -60,7 +61,7 @@ export default function ThankYouPage() {
   const [gender, setGender] = useState<Gender>(null);
   const [categories, setCategories] = useState<string[]>([]);
   const [designers, setDesigners] = useState('');
-  const [firstName, setFirstName] = useState('');
+  const [name, setName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -160,16 +161,32 @@ export default function ThankYouPage() {
       gender,
       categories,
       favouriteDesigners: designers,
-      firstName,
+      name,
     });
 
     setIsSaving(false);
 
     if (!result.ok) {
+      capturePosthogEvent('waitlist_preferences_save_failed', {
+        error_message: result.error,
+      });
       setSaveError(result.error);
       return;
     }
 
+    identifyPosthogUser(email, {
+      email,
+      gender,
+      categories,
+      favourite_designers: designers.trim() || null,
+      name: name.trim() || null,
+    });
+    capturePosthogEvent('waitlist_preferences_saved', {
+      has_name: Boolean(name.trim()),
+      gender,
+      category_count: categories.length,
+      has_favourite_designers: Boolean(designers.trim()),
+    });
     setSaved(true);
   };
 
@@ -364,16 +381,16 @@ export default function ThankYouPage() {
                       />
                     </motion.div>
 
-                    {/* First name */}
+                    {/* Name */}
                     <motion.div variants={CONTENT_ITEM_VARIANTS}>
-                      <label className="mb-2 block text-sm font-medium" htmlFor="firstName">
+                      <label className="mb-2 block text-sm font-medium" htmlFor="name">
                         Name
                       </label>
                       <input
-                        id="firstName"
+                        id="name"
                         type="text"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                         placeholder=""
                         className="h-11 w-full border border-neutral-300 bg-white px-3 text-black outline-none transition focus:border-black"
                       />

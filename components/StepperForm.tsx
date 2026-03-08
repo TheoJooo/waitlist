@@ -2,9 +2,10 @@
 
 import { startTransition, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { capturePosthogEvent, getUtmFromWindow } from '@/lib/analytics';
+import { capturePosthogEvent, getUtmFromWindow, identifyPosthogUser } from '@/lib/analytics';
 import { EMAIL_RGX } from '@/lib/waitlist';
 import { submitWaitlistSignup } from '@/lib/waitlist-api';
+import { getWaitlistSignupTiming } from '@/lib/waitlist-timing';
 import StarBorder from '@/components/ui/star-border';
 
 type StepperFormProps = {
@@ -19,12 +20,15 @@ export default function StepperForm({ location }: StepperFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const hasTrackedStart = useRef(false);
 
-  useEffect(() => { router.prefetch('/thank-you'); }, [router]);
+  useEffect(() => { router.prefetch('/waitlist/thank-you'); }, [router]);
 
   const trackStart = () => {
     if (hasTrackedStart.current) return;
     hasTrackedStart.current = true;
-    capturePosthogEvent('waitlist_form_started', { form_location: location, ...getUtmFromWindow() });
+    capturePosthogEvent('waitlist_signup_started', {
+      form_location: location,
+      ...getUtmFromWindow(),
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,14 +39,16 @@ export default function StepperForm({ location }: StepperFormProps) {
 
     if (!EMAIL_RGX.test(email.trim())) {
       setEmailError('Please enter a valid email address.');
+      capturePosthogEvent('waitlist_signup_failed', {
+        form_location: location,
+        error_type: 'validation',
+      });
       return;
     }
 
     const trimmedEmail = email.trim().toLowerCase();
     const utmProperties = getUtmFromWindow();
-
-    try { sessionStorage.setItem('waitlist_email', trimmedEmail); } catch {}
-    capturePosthogEvent('waitlist_signup_submitted', { form_location: location, ...utmProperties });
+    const signupTiming = getWaitlistSignupTiming();
 
     setIsSubmitting(true);
 
@@ -50,16 +56,36 @@ export default function StepperForm({ location }: StepperFormProps) {
       email: trimmedEmail,
       formLocation: location,
       utmProperties,
+      ...signupTiming,
     });
 
     if (!result.ok) {
+      capturePosthogEvent('waitlist_signup_failed', {
+        form_location: location,
+        error_type: 'server',
+        error_message: result.error,
+        time_to_signup_ms: signupTiming.timeToSignupMs,
+        ...utmProperties,
+      });
       setGeneralError(result.error);
       setIsSubmitting(false);
       return;
     }
 
+    try { sessionStorage.setItem('waitlist_email', trimmedEmail); } catch {}
+    identifyPosthogUser(trimmedEmail, {
+      email: trimmedEmail,
+      form_location: location,
+      ...utmProperties,
+    });
+    capturePosthogEvent('waitlist_signup_succeeded', {
+      form_location: location,
+      time_to_signup_ms: signupTiming.timeToSignupMs,
+      ...utmProperties,
+    });
+
     startTransition(() => {
-      router.push('/thank-you');
+      router.push('/waitlist/thank-you');
     });
   };
 

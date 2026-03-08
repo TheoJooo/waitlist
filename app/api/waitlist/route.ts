@@ -10,11 +10,13 @@ function isMissingOnConflictConstraint(error: PostgrestError) {
   return error.code === '42P10' || /on conflict/i.test(error.message);
 }
 
-async function persistWaitlistRow(row: Record<string, string | null | undefined>) {
+async function persistWaitlistRow(
+  row: Record<string, string | number | null | undefined>
+) {
   const supabase = getSupabaseServerClient();
 
   if (!supabase) {
-    return 'Supabase server configuration is missing.';
+    return 'Supabase server configuration is missing. Set SUPABASE_SECRET_KEY.';
   }
 
   const payload = Object.fromEntries(

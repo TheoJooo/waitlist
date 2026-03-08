@@ -40,11 +40,12 @@ class ImageTrailEffect {
   private container: HTMLDivElement;
   private images: ImageItem[];
   private imagesTotal: number;
-  private imgPosition = 0;
+  private imgPosition = -1;
+  private imageOrder: number[] = [];
   private zIndexVal = 1;
   private activeImagesCount = 0;
   private isIdle = true;
-  private threshold = 80;
+  private threshold = 55;
   private mousePos = { x: 0, y: 0 };
   private lastMousePos = { x: 0, y: 0 };
   private cacheMousePos = { x: 0, y: 0 };
@@ -83,9 +84,35 @@ class ImageTrailEffect {
     this.rafId = requestAnimationFrame(() => this.render());
   }
 
+  private refillImageOrder() {
+    this.imageOrder = Array.from({ length: this.imagesTotal }, (_, index) => index).filter(
+      (index) => index !== this.imgPosition
+    );
+
+    for (let index = this.imageOrder.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [this.imageOrder[index], this.imageOrder[swapIndex]] = [
+        this.imageOrder[swapIndex],
+        this.imageOrder[index],
+      ];
+    }
+  }
+
+  private getNextImageIndex() {
+    if (this.imagesTotal <= 1) {
+      return 0;
+    }
+
+    if (this.imageOrder.length === 0) {
+      this.refillImageOrder();
+    }
+
+    return this.imageOrder.pop() ?? 0;
+  }
+
   private showNextImage() {
     ++this.zIndexVal;
-    this.imgPosition = this.imgPosition < this.imagesTotal - 1 ? this.imgPosition + 1 : 0;
+    this.imgPosition = this.getNextImageIndex();
     const img = this.images[this.imgPosition];
     gsap.killTweensOf(img.DOM.el);
     gsap.timeline({

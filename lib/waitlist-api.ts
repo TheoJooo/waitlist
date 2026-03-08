@@ -6,6 +6,8 @@ type WaitlistSignupRequest = {
   email: string;
   formLocation: string;
   utmProperties: UTMProperties;
+  landingArrivedAt: string | null;
+  timeToSignupMs: number | null;
 };
 
 type WaitlistPreferencesRequest = {
@@ -13,7 +15,7 @@ type WaitlistPreferencesRequest = {
   gender: "Women's" | "Men's" | 'Both' | null;
   categories: string[];
   favouriteDesigners: string;
-  firstName: string;
+  name: string;
 };
 
 async function postJson(path: string, payload: unknown): Promise<ApiResult> {

@@ -5,6 +5,9 @@ import type { ReactNode } from 'react';
 export const metadata: Metadata = {
   title: 'Privacy Policy | Various Archives',
   description: 'How Various Archives collects, uses, shares, and protects personal data.',
+  alternates: {
+    canonical: '/privacy',
+  },
 };
 
 const lastUpdated = 'March 7, 2026';
@@ -39,7 +42,7 @@ function List({ items }: { items: readonly ReactNode[] }) {
 export default function PrivacyPage() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-3xl px-6 py-14 text-[#1a140f]">
-      <Link href="/" className="inline-flex text-sm underline underline-offset-2">
+      <Link href="/waitlist" className="inline-flex text-sm underline underline-offset-2">
         Back to waitlist
       </Link>
 
@@ -67,7 +70,7 @@ export default function PrivacyPage() {
             contact@various-archives.com
           </a>
         </p>
-        <p>Postal address: [To be completed]</p>
+        <p>Postal address: Tokyo, Seoul, Paris.</p>
         <p>
           We have not appointed a Data Protection Officer at this time. If that changes, we will
           update this policy.
@@ -203,10 +206,10 @@ export default function PrivacyPage() {
         <p>Current key service providers include:</p>
         <List
           items={[
-            'Hosting and delivery: Vercel',
+            'Hosting, delivery, and aggregated web analytics: Vercel',
             'Database and possibly authentication: Supabase',
             'Email and domain services: Infomaniak',
-            'Analytics if enabled: PostHog',
+            'Product analytics with consent: PostHog',
           ]}
         />
 

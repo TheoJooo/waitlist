@@ -1,3 +1,23 @@
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'waitlist'
+      and column_name = 'first_name'
+  ) and not exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'waitlist'
+      and column_name = 'name'
+  ) then
+    alter table public.waitlist rename column first_name to name;
+  end if;
+end;
+$$;
+
 alter table public.waitlist
   add column if not exists form_location text,
   add column if not exists utm_source text,
@@ -8,19 +28,29 @@ alter table public.waitlist
   add column if not exists gender text,
   add column if not exists categories text,
   add column if not exists favourite_designers text,
-  add column if not exists first_name text,
+  add column if not exists name text,
   add column if not exists created_at timestamptz not null default timezone('utc', now()),
   add column if not exists updated_at timestamptz not null default timezone('utc', now());
+
+with ranked as (
+  select
+    id,
+    row_number() over (
+      partition by lower(trim(email))
+      order by created_at desc nulls last, id desc
+    ) as rn
+  from public.waitlist
+  where email is not null
+)
+delete from public.waitlist w
+using ranked r
+where w.id = r.id
+  and r.rn > 1;
 
 update public.waitlist
 set email = lower(trim(email))
 where email is not null
   and email <> lower(trim(email));
-
-delete from public.waitlist older
-using public.waitlist newer
-where older.email = newer.email
-  and older.ctid < newer.ctid;
 
 create unique index if not exists waitlist_email_unique_idx
   on public.waitlist (email);

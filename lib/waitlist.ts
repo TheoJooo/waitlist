@@ -20,6 +20,8 @@ export type WaitlistSignupInput = {
   email: string;
   formLocation: string;
   utmProperties: UTMProperties;
+  landingArrivedAt: string | null;
+  timeToSignupMs: number | null;
 };
 
 export type WaitlistPreferencesInput = {
@@ -27,7 +29,7 @@ export type WaitlistPreferencesInput = {
   gender: AllowedGender | null;
   categories: string | null;
   favouriteDesigners: string | null;
-  firstName: string | null;
+  name: string | null;
 };
 
 function isPlainObject(value: unknown): value is PlainObject {
@@ -68,6 +70,34 @@ function sanitizeUtmProperties(value: unknown): UTMProperties {
   }
 
   return result;
+}
+
+function sanitizeLandingArrivedAt(value: unknown) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const timestamp = Date.parse(value);
+
+  if (!Number.isFinite(timestamp)) {
+    return null;
+  }
+
+  return new Date(timestamp).toISOString();
+}
+
+function sanitizeTimeToSignupMs(value: unknown) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return null;
+  }
+
+  const rounded = Math.round(value);
+
+  if (rounded < 0 || rounded > 86_400_000) {
+    return null;
+  }
+
+  return rounded;
 }
 
 function sanitizeGender(value: unknown): AllowedGender | null {
@@ -112,6 +142,8 @@ export function parseWaitlistSignupPayload(payload: unknown) {
       email,
       formLocation: sanitizeFormLocation(payload.formLocation),
       utmProperties: sanitizeUtmProperties(payload.utmProperties),
+      landingArrivedAt: sanitizeLandingArrivedAt(payload.landingArrivedAt),
+      timeToSignupMs: sanitizeTimeToSignupMs(payload.timeToSignupMs),
     } satisfies WaitlistSignupInput,
   };
 }
@@ -133,7 +165,7 @@ export function parseWaitlistPreferencesPayload(payload: unknown) {
       gender: sanitizeGender(payload.gender),
       categories: sanitizeCategories(payload.categories),
       favouriteDesigners: sanitizeText(payload.favouriteDesigners),
-      firstName: sanitizeText(payload.firstName),
+      name: sanitizeText(payload.name ?? payload.firstName),
     } satisfies WaitlistPreferencesInput,
   };
 }
@@ -142,6 +174,8 @@ export function buildWaitlistSignupRow(input: WaitlistSignupInput) {
   return {
     email: input.email,
     form_location: input.formLocation,
+    landing_arrived_at: input.landingArrivedAt,
+    time_to_signup_ms: input.timeToSignupMs,
     ...input.utmProperties,
   };
 }
@@ -152,6 +186,6 @@ export function buildWaitlistPreferencesRow(input: WaitlistPreferencesInput) {
     gender: input.gender,
     categories: input.categories,
     favourite_designers: input.favouriteDesigners,
-    first_name: input.firstName,
+    name: input.name,
   };
 }

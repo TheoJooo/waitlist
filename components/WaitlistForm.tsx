@@ -2,9 +2,10 @@
 
 import { startTransition, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { capturePosthogEvent, getUtmFromWindow } from '@/lib/analytics';
+import { capturePosthogEvent, getUtmFromWindow, identifyPosthogUser } from '@/lib/analytics';
 import { EMAIL_RGX } from '@/lib/waitlist';
 import { submitWaitlistSignup } from '@/lib/waitlist-api';
+import { getWaitlistSignupTiming } from '@/lib/waitlist-timing';
 import StarBorder from '@/components/ui/star-border';
 
 type WaitlistFormProps = {
@@ -21,7 +22,7 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
   const [isSubmitting, setIsSubmitting] = useState(false);
   const hasTrackedStart = useRef(false);
 
-  useEffect(() => { router.prefetch('/thank-you'); }, [router]);
+  useEffect(() => { router.prefetch('/waitlist/thank-you'); }, [router]);
   const isHero = location === 'hero';
 
   const inputClassName = isHero
@@ -34,7 +35,10 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
   const trackFormStart = () => {
     if (hasTrackedStart.current) return;
     hasTrackedStart.current = true;
-    capturePosthogEvent('waitlist_form_started', { form_location: location, ...getUtmFromWindow() });
+    capturePosthogEvent('waitlist_signup_started', {
+      form_location: location,
+      ...getUtmFromWindow(),
+    });
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -45,30 +49,53 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
 
     if (!EMAIL_RGX.test(email.trim())) {
       setEmailError('Please enter a valid email address.');
+      capturePosthogEvent('waitlist_signup_failed', {
+        form_location: location,
+        error_type: 'validation',
+      });
       return;
     }
 
     const trimmedEmail = email.trim().toLowerCase();
     const utmProperties = getUtmFromWindow();
+    const signupTiming = getWaitlistSignupTiming();
 
     setIsSubmitting(true);
-    try { sessionStorage.setItem('waitlist_email', trimmedEmail); } catch {}
-    capturePosthogEvent('waitlist_signup_submitted', { form_location: location, ...utmProperties });
 
     const result = await submitWaitlistSignup({
       email: trimmedEmail,
       formLocation: location,
       utmProperties,
+      ...signupTiming,
     });
 
     if (!result.ok) {
+      capturePosthogEvent('waitlist_signup_failed', {
+        form_location: location,
+        error_type: 'server',
+        error_message: result.error,
+        time_to_signup_ms: signupTiming.timeToSignupMs,
+        ...utmProperties,
+      });
       setGeneralError(result.error);
       setIsSubmitting(false);
       return;
     }
 
+    try { sessionStorage.setItem('waitlist_email', trimmedEmail); } catch {}
+    identifyPosthogUser(trimmedEmail, {
+      email: trimmedEmail,
+      form_location: location,
+      ...utmProperties,
+    });
+    capturePosthogEvent('waitlist_signup_succeeded', {
+      form_location: location,
+      time_to_signup_ms: signupTiming.timeToSignupMs,
+      ...utmProperties,
+    });
+
     startTransition(() => {
-      router.push('/thank-you');
+      router.push('/waitlist/thank-you');
     });
   };
 

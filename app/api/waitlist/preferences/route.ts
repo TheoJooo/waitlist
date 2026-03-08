@@ -5,7 +5,7 @@ async function persistWaitlistPreferences(row: Record<string, string | null>) {
   const supabase = getSupabaseServerClient();
 
   if (!supabase) {
-    return 'Supabase server configuration is missing.';
+    return 'Supabase server configuration is missing. Set SUPABASE_SECRET_KEY.';
   }
 
   const result = await supabase
