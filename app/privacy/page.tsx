@@ -186,8 +186,7 @@ export default function PrivacyPage() {
 
       <Section title="6. Cookies and similar technologies">
         <p>
-          We explain cookies and similar technologies in a separate Cookie Policy: [link to be
-          added]. For many non-essential trackers, EU rules require prior consent and an easy way
+          We explain cookies and similar technologies in a separate Cookie Policy. For many non-essential trackers, EU rules require prior consent and an easy way
           to withdraw it.
         </p>
       </Section>
