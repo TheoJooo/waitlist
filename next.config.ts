@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    optimizePackageImports: ['gsap', 'ogl', 'lucide-react', '@paper-design/shaders-react'],
+  },
 };
 
 export default nextConfig;

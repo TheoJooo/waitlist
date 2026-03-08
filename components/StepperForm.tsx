@@ -8,13 +8,11 @@ import { submitWaitlistSignup } from '@/lib/waitlist-api';
 import { getWaitlistSignupTiming } from '@/lib/waitlist-timing';
 import StarBorder from '@/components/ui/star-border';
 
-type WaitlistFormProps = {
-  location: 'hero' | 'mid' | 'footer';
-  title?: string;
-  buttonLabel?: string;
+type StepperFormProps = {
+  location: string;
 };
 
-export default function WaitlistForm({ location, title, buttonLabel }: WaitlistFormProps) {
+export default function StepperForm({ location }: StepperFormProps) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -23,16 +21,8 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
   const hasTrackedStart = useRef(false);
 
   useEffect(() => { router.prefetch('/waitlist/thank-you'); }, [router]);
-  const isHero = location === 'hero';
 
-  const inputClassName = isHero
-    ? 'h-11 w-full rounded-none border border-white/45 bg-white/8 px-3 text-neutral-50 caret-white outline-none transition placeholder:text-neutral-400 focus:border-white focus:bg-white/12'
-    : 'h-11 w-full rounded-none border border-neutral-300 bg-white px-3 text-black outline-none transition focus:border-black';
-  const errorClassName = isHero ? 'text-sm text-red-300' : 'text-sm text-red-700';
-  const buttonEffectColor = isHero ? 'rgba(255, 255, 255, 0.95)' : 'rgba(17, 17, 17, 0.75)';
-  const ctaLabel = buttonLabel ?? 'Get Early Access';
-
-  const trackFormStart = () => {
+  const trackStart = () => {
     if (hasTrackedStart.current) return;
     hasTrackedStart.current = true;
     capturePosthogEvent('waitlist_signup_started', {
@@ -41,11 +31,11 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
     });
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setEmailError('');
     setGeneralError('');
-    trackFormStart();
+    trackStart();
 
     if (!EMAIL_RGX.test(email.trim())) {
       setEmailError('Please enter a valid email address.');
@@ -99,45 +89,40 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
     });
   };
 
+  const inputClass = 'h-11 w-full border border-white/35 bg-white/12 px-3 text-white caret-white outline-none transition placeholder:text-neutral-400 focus:border-white/60 focus:bg-white/18 text-sm';
+  const errorClass = 'mt-1 text-xs text-red-400';
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-2" noValidate>
-      {title ? (
-        <h3 className={isHero ? 'text-xl font-semibold tracking-tight text-neutral-100' : 'text-xl font-semibold tracking-tight'}>
-          {title}
-        </h3>
-      ) : null}
-
-      <div>
-        <input
-          type="email"
-          value={email}
-          onFocus={trackFormStart}
-          onChange={(e) => setEmail(e.target.value)}
-          autoComplete="email"
-          placeholder="Your email"
-          required
-          className={inputClassName}
-        />
-        {emailError && <p className={`mt-1 ${errorClassName}`}>{emailError}</p>}
-      </div>
-
-      <StarBorder
-        as="button"
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full"
-        color={buttonEffectColor}
-        speed="3.5s"
-        thickness={1.5}
-      >
-        {isSubmitting ? 'Submitting...' : ctaLabel}
-      </StarBorder>
-
-      <p className={isHero ? 'text-xs text-neutral-400 text-center' : 'text-xs text-neutral-600 text-center'}>
-        No spam. Unsubscribe anytime.
-      </p>
-
-      {generalError && <p className={errorClassName}>{generalError}</p>}
-    </form>
+    <div className="w-full max-w-sm">
+      <form onSubmit={handleSubmit} noValidate>
+        <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onFocus={trackStart}
+              placeholder="Your email"
+              autoComplete="email"
+              required
+              className={inputClass}
+            />
+          </div>
+          <StarBorder
+            as="button"
+            type="submit"
+            disabled={isSubmitting}
+            color="rgba(255,255,255,0.85)"
+            speed="3.5s"
+            thickness={1.5}
+          >
+            {isSubmitting ? 'Submitting...' : 'Secure My Spot'}
+          </StarBorder>
+        </div>
+        {emailError && <p className={errorClass}>{emailError}</p>}
+        {generalError && <p className={errorClass}>{generalError}</p>}
+        <p className="mt-2 text-[11px] text-neutral-600">No spam. Unsubscribe anytime.</p>
+      </form>
+    </div>
   );
 }
