@@ -498,14 +498,14 @@ export default function Home() {
   );
 
   return (
-    <main ref={pageRef} className="min-h-screen bg-[var(--body-background)] text-[var(--main-black)]">
+    <main ref={pageRef} className="min-h-screen bg-(--body-background) text-(--main-black)">
       <div
-        className={`fixed inset-0 z-[80] flex items-center justify-center bg-[#f5f3ee] px-6 text-center transition-opacity duration-350 ease-out ${
+        className={`fixed inset-0 z-80 flex items-center justify-center bg-[#f5f3ee] px-6 text-center transition-opacity duration-350 ease-out ${
           isIntroComplete ? 'pointer-events-none opacity-0' : 'opacity-100'
         }`}
       >
         <p
-          className={`max-w-sm text-base font-medium tracking-[-0.02em] text-[var(--main-black)] transition-all duration-300 ease-out md:text-lg ${
+          className={`max-w-sm text-base font-medium tracking-[-0.02em] text-(--main-black) transition-all duration-300 ease-out md:text-lg ${
             isIntroComplete ? '-translate-y-2 opacity-0' : 'translate-y-0 opacity-100'
           }`}
         >
@@ -528,14 +528,14 @@ export default function Home() {
         >
           {BackgroundPaperShadersComponent ? <BackgroundPaperShadersComponent /> : null}
           <div
-            className="pointer-events-none absolute inset-0 z-[1]"
+            className="pointer-events-none absolute inset-0 z-1"
             style={{
               background: 'radial-gradient(ellipse 100% 30% at 50% 100%, #eee 0%, rgba(238,238,238,0.85) 25%, rgba(238,238,238,0.5) 55%, rgba(238,238,238,0.15) 75%, transparent 90%)',
             }}
           />
         </div>
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-40 md:h-52"
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-2 h-40 md:h-52"
           style={{ background: HERO_TO_SOCIAL_PROOF_GRADIENT }}
         />
 

@@ -67,11 +67,11 @@ export function WorldMap({
 
   return (
     <div
-      className={`relative w-full overflow-hidden rounded-lg bg-white font-sans dark:bg-black aspect-[2/1] md:aspect-[2.5/1] lg:aspect-[2/1] ${className}`.trim()}
+      className={`relative w-full overflow-hidden rounded-lg bg-white font-sans dark:bg-black aspect-2/1 md:aspect-[2.5/1] lg:aspect-2/1 ${className}`.trim()}
     >
       <Image
         src={`data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`}
-        className="pointer-events-none h-full w-full select-none object-cover [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)]"
+        className="pointer-events-none h-full w-full select-none object-cover mask-[linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)]"
         alt="world map"
         height={495}
         width={1056}

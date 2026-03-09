@@ -29,26 +29,24 @@ function CookieConsentBanner({
   onChoice: (consent: Exclude<TrackingConsent, 'pending'>) => void;
 }) {
   return (
-    <div className="fixed inset-x-4 bottom-4 z-[120] mx-auto max-w-xl border border-[var(--outline)] bg-[var(--body-background)] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.12)]">
-      <p className="text-sm font-medium text-[var(--main-black)]">Analytics consent</p>
-      <p className="mt-2 text-sm leading-6 text-[var(--text-grey)]">
-        We use analytics cookies to measure waitlist conversion and improve the site. Read more in
-        our <Link href="/privacy" className="underline underline-offset-2"> privacy policy</Link>.
+    <div className="fixed inset-x-4 bottom-4 z-120 mx-auto max-w-xl border border-(--outline) bg-(--body-background) p-4 shadow-[0_18px_60px_rgba(0,0,0,0.12)]">
+      <p className="mt-2 text-sm leading-6 text-(--text-grey)">
+        We use cookies to improve your experience. <Link href="/privacy" className="underline underline-offset-2">Privacy policy</Link>.
       </p>
       <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
           onClick={() => onChoice('denied')}
-          className="h-11 self-start px-2 text-sm font-medium text-[var(--text-grey)] transition-colors hover:text-[var(--main-black)]"
+          className="h-11 self-start px-2 text-sm font-medium text-(--text-grey) transition-colors hover:text-(--main-black)"
         >
           Reject
         </button>
         <button
           type="button"
           onClick={() => onChoice('granted')}
-          className="h-11 border border-[var(--main-black)] bg-[var(--main-black)] px-5 text-sm font-medium text-white transition-opacity hover:opacity-90 sm:min-w-44"
+          className="h-11 cursor-pointer border border-(--main-black) bg-(--main-black) px-5 text-sm font-medium text-white transition-opacity hover:opacity-90 sm:min-w-44"
         >
-          Accept analytics
+          Accept
         </button>
       </div>
     </div>
