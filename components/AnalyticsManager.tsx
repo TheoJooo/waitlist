@@ -2,11 +2,10 @@
 
 import Link from 'next/link';
 import Script from 'next/script';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import {
   capturePosthogEvent,
-  extractUtmProperties,
   getTrackingConsent,
   setTrackingConsent,
   type TrackingConsent,
@@ -20,7 +19,7 @@ const posthogSnippet = posthogKey
       posthogKey
     )},{api_host:${JSON.stringify(
       posthogHost
-    )},capture_pageview:false,capture_pageleave:true,person_profiles:"identified_only"});`
+    )},capture_pageview:true,capture_pageleave:true,person_profiles:"identified_only"});`
   : null;
 
 function CookieConsentBanner({
@@ -55,11 +54,8 @@ function CookieConsentBanner({
 
 export default function AnalyticsManager() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [consent, setConsent] = useState<TrackingConsent>('pending');
   const [isPostHogReady, setIsPostHogReady] = useState(false);
-
-  const currentUrlSearch = useMemo(() => searchParams?.toString() ?? '', [searchParams]);
 
   useEffect(() => {
     setConsent(getTrackingConsent());
@@ -96,18 +92,12 @@ export default function AnalyticsManager() {
   useEffect(() => {
     if (consent !== 'granted' || !isPostHogReady || !pathname) return;
 
-    const utmProps = extractUtmProperties(searchParams);
-    capturePosthogEvent('waitlist_page_view', {
-      page_path: pathname,
-      ...utmProps,
-    });
-
     if (pathname === '/waitlist/thank-you') {
       capturePosthogEvent('waitlist_thank_you_view', {
         page_path: pathname,
       });
     }
-  }, [consent, isPostHogReady, pathname, currentUrlSearch, searchParams]);
+  }, [consent, isPostHogReady, pathname]);
 
   if (!posthogSnippet) {
     return null;

@@ -574,8 +574,8 @@ export default function Home() {
       </section>
 
       {/* Social proof */}
-      <section className="relative z-10 -mt-24 w-full overflow-hidden md:-mt-28" data-reveal-group="soft">
-        <div className="relative mx-auto max-w-5xl px-6 pt-32 pb-24 text-center md:pt-36">
+      <section className="relative z-10 -mt-16 w-full overflow-hidden md:-mt-28" data-reveal-group="soft">
+        <div className="relative mx-auto max-w-5xl px-6 pt-32 pb-28 text-center md:pt-28 md:pb-24">
           <p data-reveal-item className="text-lg font-medium">Join 1,000+ luxury fashion collectors who&apos;ve secured their early access.</p>
           <p data-reveal-item className="mt-2 text-sm text-[var(--text-grey)] hidden md:block">
             56k+ community · 172 designers · Selected professional sellers
@@ -590,7 +590,7 @@ export default function Home() {
 
       {/* Pain points */}
       <section className="relative w-full bg-white overflow-hidden">
-        <div className="mx-auto max-w-5xl md:border-t md:border-[var(--outline)] px-6 py-32" data-reveal-group="feature-grid">
+        <div className="mx-auto max-w-5xl px-6 pt-24 pb-32 md:border-t md:border-[var(--outline)] md:py-32" data-reveal-group="feature-grid">
           <h2 data-reveal-heading className="text-2xl font-semibold px-4 md:px-0">The problem with luxury vintage today</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             {PAIN_POINTS.map((item) => (
