@@ -101,19 +101,19 @@ html {
 
 @keyframes accordion-down {
   from {
-    grid-template-rows: 0fr;
+    height: 0;
   }
   to {
-    grid-template-rows: 1fr;
+    height: var(--radix-accordion-content-height);
   }
 }
 
 @keyframes accordion-up {
   from {
-    grid-template-rows: 1fr;
+    height: var(--radix-accordion-content-height);
   }
   to {
-    grid-template-rows: 0fr;
+    height: 0;
   }
 }
 
