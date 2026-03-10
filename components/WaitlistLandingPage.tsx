@@ -336,6 +336,17 @@ function useIsMobile() {
   return isMobile;
 }
 
+function useIsLowEndDevice() {
+  const [isLowEnd, setIsLowEnd] = useState(false);
+  useEffect(() => {
+    const cores = navigator.hardwareConcurrency ?? 4;
+    const conn = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection;
+    const slowNetwork = conn?.effectiveType === '2g' || conn?.effectiveType === 'slow-2g';
+    setIsLowEnd(cores <= 2 || !!slowNetwork);
+  }, []);
+  return isLowEnd;
+}
+
 function useDeferredMount<T extends HTMLElement>(rootMargin = '320px') {
   const ref = useRef<T>(null);
   const [shouldMount, setShouldMount] = useState(false);
@@ -385,6 +396,7 @@ function useLazyClientComponent<T>(load: () => Promise<T>, enabled: boolean) {
 
 export default function Home() {
   const isMobile = useIsMobile();
+  const isLowEnd = useIsLowEndDevice();
   const pageRef = useRef<HTMLElement>(null);
   const [showHeroShader, setShowHeroShader] = useState(false);
   const [benefitsVisualRef, showBenefitsVisuals] = useDeferredMount<HTMLElement>('340px');
@@ -393,11 +405,11 @@ export default function Home() {
   const BackgroundPaperShadersComponent =
     useLazyClientComponent<BackgroundPaperShadersType>(loadBackgroundPaperShaders, showHeroShader);
   const FlyingPostersComponent =
-    useLazyClientComponent<FlyingPostersType>(loadFlyingPosters, showStepsVisuals);
+    useLazyClientComponent<FlyingPostersType>(loadFlyingPosters, showStepsVisuals && !isLowEnd);
   const LightRaysComponent =
-    useLazyClientComponent<LightRaysType>(loadLightRays, showBenefitsVisuals);
+    useLazyClientComponent<LightRaysType>(loadLightRays, showBenefitsVisuals && !isLowEnd);
   const ImageTrailComponent =
-    useLazyClientComponent<ImageTrailType>(loadImageTrail, showBenefitsVisuals && !isMobile);
+    useLazyClientComponent<ImageTrailType>(loadImageTrail, showBenefitsVisuals && !isMobile && !isLowEnd);
   const WorldMapComponent =
     useLazyClientComponent<WorldMapType>(loadWorldMap, showFooterVisuals);
 
