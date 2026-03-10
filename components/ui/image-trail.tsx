@@ -75,12 +75,27 @@ class ImageTrailEffect {
     window.addEventListener('mousemove', this.mouseMoveHandler);
   }
 
+  private idleFrames = 0;
+  private static readonly MAX_IDLE_FRAMES = 60; // Stop after ~1s idle at 60fps
+
   private render() {
     const distance = getMouseDistance(this.mousePos, this.lastMousePos);
     this.cacheMousePos.x = lerp(this.cacheMousePos.x, this.mousePos.x, 0.1);
     this.cacheMousePos.y = lerp(this.cacheMousePos.y, this.mousePos.y, 0.1);
-    if (distance > this.threshold) { this.showNextImage(); this.lastMousePos = { ...this.mousePos }; }
+    if (distance > this.threshold) { this.showNextImage(); this.lastMousePos = { ...this.mousePos }; this.idleFrames = 0; }
     if (this.isIdle && this.zIndexVal !== 1) this.zIndexVal = 1;
+
+    if (this.isIdle) {
+      this.idleFrames++;
+      if (this.idleFrames > ImageTrailEffect.MAX_IDLE_FRAMES) {
+        this.rafId = null;
+        this.started = false;
+        return;
+      }
+    } else {
+      this.idleFrames = 0;
+    }
+
     this.rafId = requestAnimationFrame(() => this.render());
   }
 

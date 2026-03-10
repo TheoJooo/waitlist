@@ -53,7 +53,6 @@ const FLYING_POSTERS_FADE_MASK =
   'linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.92) 16%, #000 34%, #000 62%, rgba(0, 0, 0, 0.78) 76%, rgba(0, 0, 0, 0.28) 92%, transparent 100%)';
 const HERO_TO_SOCIAL_PROOF_GRADIENT =
   'linear-gradient(to bottom, rgba(238, 238, 238, 0) 0%, rgba(238, 238, 238, 0.08) 18%, rgba(238, 238, 238, 0.32) 42%, rgba(238, 238, 238, 0.72) 74%, var(--body-background) 100%)';
-const INTRO_OVERLAY_HOLD_MS = 320;
 
 const PAIN_POINTS = [
   {
@@ -319,10 +318,20 @@ function animateFooterSection(section: HTMLElement) {
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
+    let timer: ReturnType<typeof setTimeout>;
+    const check = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        setIsMobile((prev) => {
+          const next = window.innerWidth < 768;
+          return prev === next ? prev : next;
+        });
+      }, 200);
+    };
+    // Initial check without debounce
+    setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    return () => { window.removeEventListener('resize', check); clearTimeout(timer); };
   }, []);
   return isMobile;
 }
@@ -378,7 +387,6 @@ export default function Home() {
   const isMobile = useIsMobile();
   const pageRef = useRef<HTMLElement>(null);
   const [showHeroShader, setShowHeroShader] = useState(false);
-  const [isIntroComplete, setIsIntroComplete] = useState(false);
   const [benefitsVisualRef, showBenefitsVisuals] = useDeferredMount<HTMLElement>('340px');
   const [stepsVisualRef, showStepsVisuals] = useDeferredMount<HTMLElement>('340px');
   const [footerVisualRef, showFooterVisuals] = useDeferredMount<HTMLElement>('340px');
@@ -394,38 +402,13 @@ export default function Home() {
     useLazyClientComponent<WorldMapType>(loadWorldMap, showFooterVisuals);
 
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) {
-      setShowHeroShader(true);
-      setIsIntroComplete(true);
-      return;
-    }
-
-    let rafA = 0;
-    let rafB = 0;
-    let revealTimeout = 0;
-
-    rafA = window.requestAnimationFrame(() => {
-      rafB = window.requestAnimationFrame(() => {
-        setShowHeroShader(true);
-        revealTimeout = window.setTimeout(() => {
-          setIsIntroComplete(true);
-        }, INTRO_OVERLAY_HOLD_MS);
-      });
-    });
-
-    return () => {
-      window.cancelAnimationFrame(rafA);
-      window.cancelAnimationFrame(rafB);
-      window.clearTimeout(revealTimeout);
-    };
+    setShowHeroShader(true);
   }, []);
 
   useGSAP(
     () => {
       const page = pageRef.current;
       if (!page) return;
-      if (!isIntroComplete) return;
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
       const heroLogo = page.querySelector<HTMLElement>('[data-hero-logo]');
@@ -489,34 +472,24 @@ export default function Home() {
         );
       }
 
-      Array.from(page.querySelectorAll<HTMLElement>('[data-reveal-group="soft"]')).forEach(animateSoftSection);
-      Array.from(page.querySelectorAll<HTMLElement>('[data-reveal-group="feature-grid"]')).forEach(animateFeatureGrid);
-      Array.from(page.querySelectorAll<HTMLElement>('[data-reveal-group="steps"]')).forEach(animateStepsSection);
-      Array.from(page.querySelectorAll<HTMLElement>('[data-reveal-group="footer-cta"]')).forEach(animateFooterSection);
+      // Defer scroll-triggered animations so they don't compete with hero paint
+      const setupScrollAnimations = () => {
+        Array.from(page.querySelectorAll<HTMLElement>('[data-reveal-group="soft"]')).forEach(animateSoftSection);
+        Array.from(page.querySelectorAll<HTMLElement>('[data-reveal-group="feature-grid"]')).forEach(animateFeatureGrid);
+        Array.from(page.querySelectorAll<HTMLElement>('[data-reveal-group="steps"]')).forEach(animateStepsSection);
+        Array.from(page.querySelectorAll<HTMLElement>('[data-reveal-group="footer-cta"]')).forEach(animateFooterSection);
+      };
+      if ('requestIdleCallback' in window) {
+        (window as Window).requestIdleCallback(setupScrollAnimations, { timeout: 1500 });
+      } else {
+        setTimeout(setupScrollAnimations, 300);
+      }
     },
-    { scope: pageRef, dependencies: [isMobile, isIntroComplete], revertOnUpdate: true }
+    { scope: pageRef, dependencies: [isMobile], revertOnUpdate: true }
   );
 
   return (
     <main ref={pageRef} className="min-h-screen bg-(--body-background) text-(--main-black)">
-      <div
-        className={`fixed inset-0 z-80 flex items-center justify-center bg-[#f5f3ee] px-6 text-center transition-opacity duration-350 ease-out ${
-          isIntroComplete ? 'pointer-events-none opacity-0' : 'opacity-100'
-        }`}
-      >
-        <p
-          className={`max-w-sm text-base font-medium tracking-[-0.02em] text-(--main-black) transition-all duration-300 ease-out md:text-lg ${
-            isIntroComplete ? '-translate-y-2 opacity-0' : 'translate-y-0 opacity-100'
-          }`}
-        >
-          ...
-        </p>
-      </div>
-      <div
-        className={`transition-opacity duration-500 ease-out ${
-          isIntroComplete ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
-        }`}
-      >
 
       {/* Hero */}
       <section id="hero-form" className="relative w-full min-h-[100svh] overflow-hidden">
@@ -843,7 +816,6 @@ export default function Home() {
           </p>
         </footer>
       </section>
-      </div>
     </main>
   );
 }

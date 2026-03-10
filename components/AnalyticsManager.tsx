@@ -68,19 +68,9 @@ export default function AnalyticsManager() {
     }
 
     if (window.posthog) {
-      setIsPostHogReady(true);
-      return;
-    }
-
-    const pollId = window.setInterval(() => {
-      if (!window.posthog) return;
-
-      window.clearInterval(pollId);
       window.posthog.opt_in_capturing();
       setIsPostHogReady(true);
-    }, 50);
-
-    return () => window.clearInterval(pollId);
+    }
   }, [consent]);
 
   useEffect(() => {
@@ -110,6 +100,12 @@ export default function AnalyticsManager() {
           id="posthog-init"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{ __html: posthogSnippet }}
+          onReady={() => {
+            if (window.posthog) {
+              window.posthog.opt_in_capturing();
+              setIsPostHogReady(true);
+            }
+          }}
         />
       ) : null}
       {consent === 'pending' ? <CookieConsentBanner onChoice={(value) => {

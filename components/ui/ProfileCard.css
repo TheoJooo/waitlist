@@ -66,6 +66,7 @@
   position: relative;
   background-blend-mode: color-dodge, normal, normal, normal;
   animation: glow-bg 12s linear infinite;
+  animation-play-state: paused;
   box-shadow: rgba(0, 0, 0, 0.8) calc((var(--pointer-from-left) * 10px) - 3px)
     calc((var(--pointer-from-top) * 20px) - 6px) 20px -5px;
   transition: transform 1s ease;
@@ -115,7 +116,7 @@
   transition: filter 0.8s ease;
   filter: brightness(0.3) contrast(1.1) saturate(0.2) opacity(0.18);
   animation: holo-bg 18s linear infinite;
-  animation-play-state: running;
+  animation-play-state: paused;
   mix-blend-mode: color-dodge;
 }
 
@@ -361,6 +362,19 @@
   width: min-content;
   color: rgba(255, 255, 255, 0.45);
   font-family: inherit;
+}
+
+.pc-visible .pc-card {
+  animation-play-state: running;
+}
+
+.pc-visible .pc-shine {
+  animation-play-state: running;
+}
+
+.pc-visible .pc-card:hover .pc-shine,
+.pc-visible .pc-card.active .pc-shine {
+  animation-play-state: paused;
 }
 
 @keyframes glow-bg {

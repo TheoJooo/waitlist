@@ -182,8 +182,14 @@ export default function Aurora(props: AuroraProps) {
     ctn.appendChild(gl.canvas);
 
     let animateId = 0;
+    let paused = false;
+    let frameCount = 0;
+    const FRAME_SKIP = 2; // Render every 2nd frame (~30fps)
+
     const update = (t: number) => {
       animateId = requestAnimationFrame(update);
+      if (paused) return;
+      if (++frameCount % FRAME_SKIP !== 0) return;
       const { time = t * 0.01, speed = 1.0 } = propsRef.current;
       if (program) {
         program.uniforms.uTime.value = time * speed * 0.1;
@@ -199,10 +205,14 @@ export default function Aurora(props: AuroraProps) {
     };
     animateId = requestAnimationFrame(update);
 
+    const onVisibility = () => { paused = document.hidden; };
+    document.addEventListener("visibilitychange", onVisibility);
+
     resize();
 
     return () => {
       cancelAnimationFrame(animateId);
+      document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("resize", resize);
       if (ctn && gl.canvas.parentNode === ctn) {
         ctn.removeChild(gl.canvas);

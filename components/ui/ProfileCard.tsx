@@ -219,6 +219,17 @@ const ProfileCard = ({
   );
 
   useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { wrap.classList.toggle('pc-visible', entry.isIntersecting); },
+      { threshold: 0.05 }
+    );
+    observer.observe(wrap);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
     if (!enableTilt || !tiltEngine) return;
     const shell = shellRef.current;
     if (!shell) return;
