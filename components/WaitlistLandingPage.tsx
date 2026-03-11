@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { useGSAP } from '@gsap/react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -21,6 +21,15 @@ type FlyingPostersType = typeof import('@/components/FlyingPosters').default;
 type LightRaysType = typeof import('@/components/ui/light-rays').default;
 type ImageTrailType = typeof import('@/components/ui/image-trail').default;
 type WorldMapType = (typeof import('@/components/ui/map'))['WorldMap'];
+type MobileBenefitVisual = {
+  key: number;
+  imageIndex: number;
+  src: string;
+  top: number;
+  left: number;
+  width: number;
+  rotate: number;
+};
 
 const loadBackgroundPaperShaders = () => import('@/components/ui/background-paper-shaders').then((mod) => mod.default);
 const loadFlyingPosters = () => import('@/components/FlyingPosters').then((mod) => mod.default);
@@ -53,6 +62,10 @@ const FLYING_POSTERS_FADE_MASK =
   'linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.92) 16%, #000 34%, #000 62%, rgba(0, 0, 0, 0.78) 76%, rgba(0, 0, 0, 0.28) 92%, transparent 100%)';
 const HERO_TO_SOCIAL_PROOF_GRADIENT =
   'linear-gradient(to bottom, rgba(238, 238, 238, 0) 0%, rgba(238, 238, 238, 0.08) 18%, rgba(238, 238, 238, 0.32) 42%, rgba(238, 238, 238, 0.72) 74%, var(--body-background) 100%)';
+const MOBILE_BENEFIT_FADE_IN_MS = 900;
+const MOBILE_BENEFIT_HOLD_MS = 1500;
+const MOBILE_BENEFIT_FADE_OUT_MS = 900;
+const MOBILE_BENEFIT_GAP_MS = 260;
 
 const PAIN_POINTS = [
   {
@@ -373,6 +386,27 @@ function useDeferredMount<T extends HTMLElement>(rootMargin = '320px') {
   return [ref, shouldMount] as const;
 }
 
+function useSectionInView<T extends HTMLElement>(ref: RefObject<T | null>, rootMargin = '0px') {
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      { rootMargin, threshold: 0.15 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [ref, rootMargin]);
+
+  return isInView;
+}
+
 function useLazyClientComponent<T>(load: () => Promise<T>, enabled: boolean) {
   const [component, setComponent] = useState<T | null>(null);
 
@@ -394,6 +428,93 @@ function useLazyClientComponent<T>(load: () => Promise<T>, enabled: boolean) {
   return component;
 }
 
+function getRandomNumber(min: number, max: number) {
+  return Math.random() * (max - min) + min;
+}
+
+function createMobileBenefitVisual(previousIndex: number): MobileBenefitVisual {
+  const candidateIndexes = BENEFIT_IMAGES
+    .map((_, index) => index)
+    .filter((index) => index !== previousIndex);
+  const imageIndex = candidateIndexes[Math.floor(Math.random() * candidateIndexes.length)];
+
+  return {
+    key: Date.now() + Math.random(),
+    imageIndex,
+    src: BENEFIT_IMAGES[imageIndex],
+    top: getRandomNumber(18, 82),
+    left: getRandomNumber(20, 80),
+    width: getRandomNumber(38, 56),
+    rotate: getRandomNumber(-14, 14),
+  };
+}
+
+function useMobileBenefitBackground(enabled: boolean) {
+  const [visual, setVisual] = useState<MobileBenefitVisual | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (!enabled) {
+      setVisual(null);
+      setIsVisible(false);
+      return;
+    }
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let previousIndex = -1;
+    let cancelled = false;
+    const timers = new Set<ReturnType<typeof setTimeout>>();
+
+    const schedule = (callback: () => void, delay: number) => {
+      const timer = setTimeout(() => {
+        timers.delete(timer);
+        callback();
+      }, delay);
+
+      timers.add(timer);
+    };
+
+    const clearTimers = () => {
+      timers.forEach(clearTimeout);
+      timers.clear();
+    };
+
+    const showNext = () => {
+      if (cancelled) return;
+
+      const nextVisual = createMobileBenefitVisual(previousIndex);
+      previousIndex = nextVisual.imageIndex;
+
+      setIsVisible(false);
+      setVisual(nextVisual);
+
+      if (prefersReducedMotion) {
+        setIsVisible(true);
+        return;
+      }
+
+      schedule(() => {
+        if (!cancelled) setIsVisible(true);
+      }, 60);
+
+      schedule(() => {
+        if (!cancelled) setIsVisible(false);
+      }, MOBILE_BENEFIT_FADE_IN_MS + MOBILE_BENEFIT_HOLD_MS);
+
+      schedule(showNext, MOBILE_BENEFIT_FADE_IN_MS + MOBILE_BENEFIT_HOLD_MS + MOBILE_BENEFIT_FADE_OUT_MS + MOBILE_BENEFIT_GAP_MS);
+    };
+
+    showNext();
+
+    return () => {
+      cancelled = true;
+      clearTimers();
+    };
+  }, [enabled]);
+
+  return { visual, isVisible };
+}
+
 export default function Home() {
   const isMobile = useIsMobile();
   const isLowEnd = useIsLowEndDevice();
@@ -407,11 +528,14 @@ export default function Home() {
   const FlyingPostersComponent =
     useLazyClientComponent<FlyingPostersType>(loadFlyingPosters, showStepsVisuals && !isLowEnd);
   const LightRaysComponent =
-    useLazyClientComponent<LightRaysType>(loadLightRays, showBenefitsVisuals && !isLowEnd);
+    useLazyClientComponent<LightRaysType>(loadLightRays, showBenefitsVisuals && !isMobile && !isLowEnd);
   const ImageTrailComponent =
     useLazyClientComponent<ImageTrailType>(loadImageTrail, showBenefitsVisuals && !isMobile && !isLowEnd);
   const WorldMapComponent =
     useLazyClientComponent<WorldMapType>(loadWorldMap, showFooterVisuals);
+  const isBenefitsInView = useSectionInView(benefitsVisualRef, '-10% 0px -10% 0px');
+  const { visual: mobileBenefitVisual, isVisible: isMobileBenefitVisible } =
+    useMobileBenefitBackground(showBenefitsVisuals && isMobile && !isLowEnd && isBenefitsInView);
 
   useEffect(() => {
     setShowHeroShader(true);
@@ -609,7 +733,34 @@ export default function Home() {
             <ImageTrailComponent items={BENEFIT_IMAGES} />
           </div>
         ) : null}
-        {showBenefitsVisuals && LightRaysComponent ? (
+        {mobileBenefitVisual ? (
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden md:hidden">
+            <div
+              key={mobileBenefitVisual.key}
+              className={`absolute aspect-[3/4] overflow-hidden rounded-none border border-white/10 shadow-[0_24px_80px_rgba(0,0,0,0.45)] transition-opacity ease-out ${
+                isMobileBenefitVisible ? 'opacity-40 duration-[900ms]' : 'opacity-0 duration-[900ms]'
+              }`}
+              style={{
+                top: `${mobileBenefitVisual.top}%`,
+                left: `${mobileBenefitVisual.left}%`,
+                width: `${mobileBenefitVisual.width}vw`,
+                transform: `translate(-50%, -50%) rotate(${mobileBenefitVisual.rotate}deg)`,
+                willChange: 'opacity, transform',
+              }}
+            >
+              <Image
+                src={mobileBenefitVisual.src}
+                alt=""
+                fill
+                sizes={`${Math.round(mobileBenefitVisual.width)}vw`}
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-black/35" />
+            </div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0)_0%,rgba(0,0,0,0.14)_38%,rgba(0,0,0,0.4)_100%)]" />
+          </div>
+        ) : null}
+        {showBenefitsVisuals && !isMobile && LightRaysComponent ? (
           <div className="absolute inset-0">
             <LightRaysComponent
               raysOrigin="top-center"
@@ -807,7 +958,7 @@ export default function Home() {
               href="https://instagram.com/various.archives"
               target="_blank"
               rel="noreferrer"
-              className="text-white/40 hover:text-white/70 transition-colors"
+              className="text-white/80 underline underline-offset-3 decoration-white/40 hover:text-white transition-colors"
             >
               Instagram
             </a>
@@ -815,16 +966,16 @@ export default function Home() {
               href="https://tiktok.com/@variousarchives"
               target="_blank"
               rel="noreferrer"
-              className="text-white/40 hover:text-white/70 transition-colors"
+              className="text-white/80 underline underline-offset-3 decoration-white/40 hover:text-white transition-colors"
             >
               TikTok
             </a>
           </div>
-          <p className="text-white/30">
+          <p className="text-white/70">
             © 2026 Various Archives ·{' '}
-            <Link href="/privacy" target="_blank" rel="noreferrer" className="hover:text-white/50 transition-colors">Privacy Policy</Link>
+            <Link href="/privacy" target="_blank" rel="noreferrer" className="text-white underline underline-offset-3 decoration-white/40 hover:decoration-white transition-colors">Privacy Policy</Link>
             {' '}·{' '}
-            <a href="mailto:contact@various-archives.com" className="hover:text-white/50 transition-colors">Contact</a>
+            <a href="mailto:contact@various-archives.com" className="text-white underline underline-offset-3 decoration-white/40 hover:decoration-white transition-colors">Contact</a>
           </p>
         </footer>
       </section>

@@ -29,14 +29,14 @@ function CookieConsentBanner({
 }) {
   return (
     <div className="fixed inset-x-4 bottom-4 z-120 mx-auto max-w-xl border border-(--outline) bg-(--body-background) p-4 shadow-[0_18px_60px_rgba(0,0,0,0.12)]">
-      <p className="mt-2 text-sm leading-6 text-(--text-grey)">
+      <p className="mt-2 text-sm leading-6 text-(--main-black)">
         We use cookies to improve your experience. <Link href="/privacy" className="underline underline-offset-2">Privacy policy</Link>.
       </p>
       <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
           onClick={() => onChoice('denied')}
-          className="h-11 self-start px-2 text-sm font-medium text-(--text-grey) transition-colors hover:text-(--main-black)"
+          className="h-11 self-start px-2 text-sm font-medium text-(--main-black) transition-opacity hover:opacity-70"
         >
           Reject
         </button>
