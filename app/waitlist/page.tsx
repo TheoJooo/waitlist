@@ -12,7 +12,7 @@ const waitlistSchema = {
     '@type': 'Organization',
     name: 'Various Archives',
     url: 'https://various-archives.com',
-    sameAs: ['https://instagram.com/variousarchives'],
+    sameAs: ['https://instagram.com/various.archives', 'https://tiktok.com/@various.archives'],
   },
 };
 

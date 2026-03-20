@@ -15,7 +15,7 @@ const SOCIAL_LINKS = [
   },
   {
     label: 'Follow on TikTok',
-    href: 'https://tiktok.com/@variousarchives',
+    href: 'https://tiktok.com/@various.archives',
   },
 ];
 const CONTACT_EMAIL = 'contact@various-archives.com';
@@ -384,7 +384,7 @@ export default function ThankYouPage() {
                     {/* Name */}
                     <motion.div variants={CONTENT_ITEM_VARIANTS}>
                       <label className="mb-2 block text-sm font-medium" htmlFor="name">
-                        Name
+                        Your name
                       </label>
                       <input
                         id="name"

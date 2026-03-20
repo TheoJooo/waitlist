@@ -60,7 +60,7 @@ export default function HomePage() {
           </SpotlightCard>
 
           <p className="mt-7 max-w-xs text-[13px] leading-6 text-white/68">
-            By continuing, you agree to our{' '}
+            By continuing, you agree to our<br/>{' '}
             <Link href="/terms" className="underline underline-offset-2 hover:text-white">
               Terms
             </Link>{' '}

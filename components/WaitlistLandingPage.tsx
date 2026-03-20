@@ -657,7 +657,7 @@ export default function Home() {
           <div className="w-full grid gap-10 md:grid-cols-2 md:gap-10 md:pb-12">
             <div>
               <p data-hero-eyebrow className="text-xs uppercase tracking-[0.08em] text-[var(--silver)]">Early Access Waitlist</p>
-              <h1 className="mt-2 text-3xl font-semibold leading-thin text-[var(--text-white)] md:mt-3">
+              <h1 className="mt-2 text-3xl font-semibold leading-thin text-[var(--text-white)] md:mt-3 md:text-2xl">
                 {HERO_TITLE_LINES.map((line) => (
                   <span key={line} className="block overflow-hidden">
                     <span data-hero-line className="block">
@@ -958,15 +958,15 @@ export default function Home() {
               href="https://instagram.com/various.archives"
               target="_blank"
               rel="noreferrer"
-              className="text-white/80 underline underline-offset-3 decoration-white/40 hover:text-white transition-colors"
+              className="text-white/70 hover:text-white transition-colors"
             >
               Instagram
             </a>
             <a
-              href="https://tiktok.com/@variousarchives"
+              href="https://tiktok.com/@various.archives"
               target="_blank"
               rel="noreferrer"
-              className="text-white/80 underline underline-offset-3 decoration-white/40 hover:text-white transition-colors"
+              className="text-white/70 hover:text-white transition-colors"
             >
               TikTok
             </a>
