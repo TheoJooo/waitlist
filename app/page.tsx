@@ -61,11 +61,11 @@ export default function HomePage() {
 
           <p className="mt-7 max-w-xs text-[13px] leading-6 text-white/68">
             By continuing, you agree to our<br/>{' '}
-            <Link href="/terms" className="underline underline-offset-2 hover:text-white">
+            <Link href="/terms" className="text-white/70 hover:text-white transition-colors">
               Terms
             </Link>{' '}
             and{' '}
-            <Link href="/privacy" className="underline underline-offset-2 hover:text-white">
+            <Link href="/privacy" className="text-white/70 hover:text-white transition-colors">
               Privacy Policy
             </Link>
             .

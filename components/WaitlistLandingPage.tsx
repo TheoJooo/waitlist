@@ -973,9 +973,9 @@ export default function Home() {
           </div>
           <p className="text-white/70">
             © 2026 Various Archives ·{' '}
-            <Link href="/privacy" target="_blank" rel="noreferrer" className="text-white underline underline-offset-3 decoration-white/40 hover:decoration-white transition-colors">Privacy Policy</Link>
+            <Link href="/privacy" target="_blank" rel="noreferrer" className="text-white/70 hover:text-white transition-colors">Privacy Policy</Link>
             {' '}·{' '}
-            <a href="mailto:contact@various-archives.com" className="text-white underline underline-offset-3 decoration-white/40 hover:decoration-white transition-colors">Contact</a>
+            <a href="mailto:contact@various-archives.com" className="text-white/70 hover:text-white transition-colors">Contact</a>
           </p>
         </footer>
       </section>
