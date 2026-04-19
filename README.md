@@ -56,7 +56,7 @@ tsconfig.json
 
 Le projet utilise Brevo comme outil d'envoi et d'automation:
 - `POST /api/waitlist` ajoute ou met a jour le contact dans la liste Brevo `Waitlist`
-- `POST /api/waitlist/preferences` reenvoie le contact pour enrichir les attributs `NAME`, `GENDER`, `CATEGORIES`, `FAVOURITE_DESIGNERS`
+- `POST /api/waitlist/preferences` reenvoie le contact pour enrichir les attributs `PRENOM`, `NOM`, `GENDER_PIECES`, `CATEGORIES`, `FAVOURITE_DESIGNERS`
 - `scripts/backfill-brevo.mjs` permet de resynchroniser tous les contacts existants depuis la table Supabase `waitlist`
 
 ### Effets visuels
@@ -95,7 +95,8 @@ Important:
 - les variables prefixees `NEXT_PUBLIC_` sont exposees au client
 - les routes serveur utilisent `SUPABASE_SECRET_KEY` avec fallback sur `SUPABASE_SERVICE_ROLE_KEY`
 - il faut creer au prealable la liste Brevo `Waitlist` et recuperer son `listId`
-- si tu veux enrichir les contacts avec les preferences, creer dans Brevo les attributs `NAME`, `GENDER`, `CATEGORIES`, `FAVOURITE_DESIGNERS`
+- si tu veux enrichir les contacts avec les preferences, verifier dans Brevo les attributs `PRENOM`, `NOM`, `GENDER_PIECES`, `CATEGORIES`, `FAVOURITE_DESIGNERS`
+- `CATEGORIES` doit etre un attribut Brevo de type `multiple-choice`
 
 ## 7) Configuration Supabase minimale (exemple)
 

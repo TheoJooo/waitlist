@@ -2,7 +2,7 @@ export type WaitlistBrevoContact = {
   email: string;
   name?: string | null;
   gender?: string | null;
-  categories?: string | null;
+  categories?: string | string[] | null;
   favouriteDesigners?: string | null;
 };
 
@@ -29,7 +29,7 @@ declare const brevoContactSync: {
         email: string;
         listIds: number[];
         updateEnabled: true;
-        attributes?: Record<string, string>;
+        attributes?: Record<string, string | string[]>;
       }
     | null;
   syncWaitlistContactToBrevo(
