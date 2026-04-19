@@ -1,11 +1,11 @@
 # Various Archives Waitlist
 
-Landing page "waitlist" construite avec Next.js (App Router), Tailwind CSS v4 et Supabase.
+Landing page "waitlist" construite avec Next.js (App Router), Tailwind CSS v4, Supabase et Brevo.
 
 ## 1) Objectif du projet
 
 Cette application affiche une page unique de pre-inscription (waitlist) pour "Various Archives".  
-L'utilisateur saisit son email, qui est enregistre dans une table Supabase `waitlist`.
+L'utilisateur saisit son email, qui est enregistre dans une table Supabase `waitlist`, puis synchronise vers une liste Brevo `Waitlist`.
 
 ## 2) Stack technique
 
@@ -48,16 +48,16 @@ tsconfig.json
 ### Formulaire waitlist
 
 `components/WaitlistForm.tsx`:
-- cree un client Supabase cote navigateur avec:
-  - `NEXT_PUBLIC_SUPABASE_URL`
-  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- valide l'email via regex (`EMAIL_RGX`)
-- insere `{ email }` dans la table `waitlist`
-- gere les cas:
-  - succes: message de confirmation
-  - doublon (`error.code === '23505'`): email deja inscrit
-  - autre erreur: message generique
-- affiche une modal d'erreur fermable
+- collecte l'email et appelle `POST /api/waitlist`
+- la route serveur normalise le payload, upsert la ligne dans Supabase puis tente la sync Brevo
+- en cas d'echec Brevo, l'inscription reste acceptee si Supabase a bien persiste la ligne
+
+### Sync Brevo
+
+Le projet utilise Brevo comme outil d'envoi et d'automation:
+- `POST /api/waitlist` ajoute ou met a jour le contact dans la liste Brevo `Waitlist`
+- `POST /api/waitlist/preferences` reenvoie le contact pour enrichir les attributs `NAME`, `GENDER`, `CATEGORIES`, `FAVOURITE_DESIGNERS`
+- `scripts/backfill-brevo.mjs` permet de resynchroniser tous les contacts existants depuis la table Supabase `waitlist`
 
 ### Effets visuels
 
@@ -85,11 +85,17 @@ Creer un fichier `.env.local`:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SECRET_KEY=...
+# ou SUPABASE_SERVICE_ROLE_KEY=...
+BREVO_API_KEY=...
+BREVO_WAITLIST_LIST_ID=123
 ```
 
 Important:
 - les variables prefixees `NEXT_PUBLIC_` sont exposees au client
-- il faut configurer les policies Supabase (RLS) correctement pour autoriser l'insertion attendue
+- les routes serveur utilisent `SUPABASE_SECRET_KEY` avec fallback sur `SUPABASE_SERVICE_ROLE_KEY`
+- il faut creer au prealable la liste Brevo `Waitlist` et recuperer son `listId`
+- si tu veux enrichir les contacts avec les preferences, creer dans Brevo les attributs `NAME`, `GENDER`, `CATEGORIES`, `FAVOURITE_DESIGNERS`
 
 ## 7) Configuration Supabase minimale (exemple)
 
@@ -120,6 +126,16 @@ Puis ouvrir: [http://localhost:3000](http://localhost:3000)
 - `npm run build`: build de production
 - `npm run start`: lance le serveur de production
 - `npm run lint`: lint Next.js
+- `npm run backfill:brevo`: relit la table Supabase `waitlist` par lots et pousse les contacts vers Brevo
+
+Exemple de backfill manuel:
+
+```bash
+npm run backfill:brevo
+```
+
+Optionnel:
+- `BREVO_BACKFILL_BATCH_SIZE=500 npm run backfill:brevo`
 
 ## 10) Styles et theming
 
