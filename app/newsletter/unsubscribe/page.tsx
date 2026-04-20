@@ -66,10 +66,12 @@ export default function NewsletterUnsubscribePage() {
           </h1>
 
           <p className="mt-4 max-w-sm text-sm leading-6 text-white/58 sm:text-base sm:leading-7">
-            If you change your mind, we&apos;ll be at{' '}
+            If you change your mind,
+            <br />
+            we&apos;ll be at{' '}
             <Link
               href="/"
-              className="text-white/76 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white"
+              className="whitespace-nowrap text-white/76 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white"
             >
               various-archives.com
             </Link>
