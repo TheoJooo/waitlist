@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   },
 };
 
-const lastUpdated = 'March 7, 2026';
+const lastUpdated = 'April 21, 2026';
 
 function Section({
   title,
@@ -291,7 +291,64 @@ export default function PrivacyPage() {
         </p>
       </Section>
 
-      <Section title="14. Changes to this policy">
+      <Section title="14. Shopify Connector App">
+        <p>
+          The Various Archives Connector is a Shopify Sales Channel app that lets merchants list
+          their products on the Various Archives marketplace. When a merchant installs and connects
+          the app, we process the following data on their behalf:
+        </p>
+        <p className="font-medium text-[#1a140f]">Data collected from merchants</p>
+        <List
+          items={[
+            'Shop domain and myshopify domain',
+            'Shopify API access token (stored encrypted, used only to read and publish products)',
+            "Product and variant data synced from the merchant\u2019s catalog: titles, descriptions, prices, images, inventory status",
+            'Publication and channel settings for the Various Archives Sales Channel',
+          ]}
+        />
+        <p className="font-medium text-[#1a140f]">Data collected through the attribution flow</p>
+        <p>
+          When a buyer clicks through to a merchant's checkout via Various Archives, we create an
+          attribution session to track whether the resulting order should be attributed to the
+          marketplace for commission purposes. We may store:
+        </p>
+        <List
+          items={[
+            'A signed attribution token (va_ref) tied to the shop and product variant',
+            'The Shopify order ID and order amount if the order is attributed',
+            'The calculated commission amount',
+            'Buyer identifiers (Shopify customer ID and email) on the attribution session, temporarily, to support GDPR data requests from that buyer',
+          ]}
+        />
+        <p className="font-medium text-[#1a140f]">Legal bases</p>
+        <p>
+          We process merchant data to perform the service contracted through the app (execution of
+          the Connector agreement, including commission billing via Shopify's usage-based billing
+          API). Attribution and billing data is processed on the basis of legitimate interests and
+          contractual necessity.
+        </p>
+        <p className="font-medium text-[#1a140f]">Retention</p>
+        <List
+          items={[
+            'Merchant and product data: retained while the app is installed and the shop is active.',
+            'Attribution and billing data: retained for up to 36 months after the last billing event for accounting and dispute purposes.',
+            'Shop redact: when Shopify sends a shop/redact webhook (48 hours after uninstall), we delete all shop-scoped data including products, attributed orders, billing records, and the shop record itself.',
+            'Buyer data on attribution sessions: nulled upon receipt of a customers/redact webhook from Shopify.',
+          ]}
+        />
+        <p className="font-medium text-[#1a140f]">GDPR requests from buyers</p>
+        <p>
+          Shopify routes buyer data-access and deletion requests to us via mandatory compliance
+          webhooks (customers/data_request and customers/redact). We process these automatically.
+          Merchants can also direct buyer inquiries to{' '}
+          <a href="mailto:contact@various-archives.com" className="underline underline-offset-2">
+            contact@various-archives.com
+          </a>
+          .
+        </p>
+      </Section>
+
+      <Section title="15. Changes to this policy">
         <p>
           We may update this policy to reflect changes in our practices, features, or legal
           requirements. We will update the &quot;Last updated&quot; date and may provide additional
