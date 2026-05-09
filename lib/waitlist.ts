@@ -1,6 +1,5 @@
 import type { UTMProperties } from '@/lib/analytics';
-
-export const EMAIL_RGX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { normalizeEmail } from '@/lib/email-quality';
 
 const UTM_KEYS = [
   'utm_source',
@@ -46,8 +45,7 @@ function sanitizeText(value: unknown, maxLength = MAX_TEXT_LENGTH) {
 }
 
 function sanitizeEmail(value: unknown) {
-  const email = sanitizeText(value)?.toLowerCase() ?? '';
-  return EMAIL_RGX.test(email) ? email : null;
+  return normalizeEmail(sanitizeText(value));
 }
 
 function sanitizeFormLocation(value: unknown) {

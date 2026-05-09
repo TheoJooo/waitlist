@@ -1,4 +1,5 @@
 import brevoContactSync, { type BrevoSyncResult } from '@/lib/brevo-contact-sync.js';
+import { getEmailDomain, getEmailSuggestion, isSuspiciousEmailDomain } from '@/lib/email-quality';
 import { buildWaitlistPreferencesRow, parseWaitlistPreferencesPayload } from '@/lib/waitlist';
 import { getSupabaseServerClient } from '@/lib/supabase-server';
 
@@ -28,6 +29,19 @@ function logBrevoSyncFailure(email: string, result: Exclude<BrevoSyncResult, { o
   });
 }
 
+function logSuspiciousEmailDomain(email: string) {
+  const domain = getEmailDomain(email);
+
+  if (!domain || !isSuspiciousEmailDomain(domain)) {
+    return;
+  }
+
+  console.info('Suspicious waitlist preference email domain.', {
+    domain,
+    suggestedDomain: getEmailSuggestion(email)?.split('@').at(1) ?? null,
+  });
+}
+
 export async function POST(request: Request) {
   let body: unknown;
 
@@ -42,6 +56,8 @@ export async function POST(request: Request) {
   if ('error' in parsed) {
     return Response.json({ error: parsed.error }, { status: 400 });
   }
+
+  logSuspiciousEmailDomain(parsed.data.email);
 
   const error = await persistWaitlistPreferences(buildWaitlistPreferencesRow(parsed.data));
 

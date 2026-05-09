@@ -3,7 +3,7 @@
 import { startTransition, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { capturePosthogEvent, getUtmFromWindow, identifyPosthogUser } from '@/lib/analytics';
-import { EMAIL_RGX } from '@/lib/waitlist';
+import { getEmailSuggestion, isValidEmail } from '@/lib/email-quality';
 import { submitWaitlistSignup } from '@/lib/waitlist-api';
 import { getWaitlistSignupTiming } from '@/lib/waitlist-timing';
 import StarBorder from '@/components/ui/star-border';
@@ -24,6 +24,7 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
 
   useEffect(() => { router.prefetch('/waitlist/thank-you'); }, [router]);
   const isHero = location === 'hero';
+  const emailSuggestion = getEmailSuggestion(email);
 
   const inputClassName = isHero
     ? 'h-11 w-full rounded-none border border-white/45 bg-white/8 px-3 text-neutral-50 caret-white outline-none transition placeholder:text-neutral-400 focus:border-white focus:bg-white/12'
@@ -47,7 +48,7 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
     setGeneralError('');
     trackFormStart();
 
-    if (!EMAIL_RGX.test(email.trim())) {
+    if (!isValidEmail(email)) {
       setEmailError('Please enter a valid email address.');
       capturePosthogEvent('waitlist_signup_failed', {
         form_location: location,
@@ -100,7 +101,7 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2" noValidate>
+    <form onSubmit={handleSubmit} className="space-y-2">
       {title ? (
         <h3 className={isHero ? 'text-xl font-semibold tracking-tight text-neutral-100' : 'text-xl font-semibold tracking-tight'}>
           {title}
@@ -118,6 +119,22 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
           required
           className={inputClassName}
         />
+        {emailSuggestion && (
+          <p className={isHero ? 'mt-1 text-sm text-neutral-300' : 'mt-1 text-sm text-neutral-700'}>
+            Did you mean{' '}
+            <button
+              type="button"
+              className={isHero ? 'underline decoration-white/50 underline-offset-2 hover:text-white' : 'underline underline-offset-2 hover:text-black'}
+              onClick={() => {
+                setEmail(emailSuggestion);
+                setEmailError('');
+              }}
+            >
+              {emailSuggestion}
+            </button>
+            ?
+          </p>
+        )}
         {emailError && <p className={`mt-1 ${errorClassName}`}>{emailError}</p>}
       </div>
 

@@ -3,7 +3,7 @@
 import { startTransition, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { capturePosthogEvent, getUtmFromWindow, identifyPosthogUser } from '@/lib/analytics';
-import { EMAIL_RGX } from '@/lib/waitlist';
+import { getEmailSuggestion, isValidEmail } from '@/lib/email-quality';
 import { submitWaitlistSignup } from '@/lib/waitlist-api';
 import { getWaitlistSignupTiming } from '@/lib/waitlist-timing';
 import StarBorder from '@/components/ui/star-border';
@@ -21,6 +21,7 @@ export default function StepperForm({ location }: StepperFormProps) {
   const hasTrackedStart = useRef(false);
 
   useEffect(() => { router.prefetch('/waitlist/thank-you'); }, [router]);
+  const emailSuggestion = getEmailSuggestion(email);
 
   const trackStart = () => {
     if (hasTrackedStart.current) return;
@@ -37,7 +38,7 @@ export default function StepperForm({ location }: StepperFormProps) {
     setGeneralError('');
     trackStart();
 
-    if (!EMAIL_RGX.test(email.trim())) {
+    if (!isValidEmail(email)) {
       setEmailError('Please enter a valid email address.');
       capturePosthogEvent('waitlist_signup_failed', {
         form_location: location,
@@ -94,7 +95,7 @@ export default function StepperForm({ location }: StepperFormProps) {
 
   return (
     <div className="w-full max-w-sm">
-      <form onSubmit={handleSubmit} noValidate>
+      <form onSubmit={handleSubmit}>
         <div className="flex items-center gap-2">
           <div className="flex-1 min-w-0">
             <input
@@ -119,6 +120,22 @@ export default function StepperForm({ location }: StepperFormProps) {
             {isSubmitting ? 'Submitting...' : 'Secure My Spot'}
           </StarBorder>
         </div>
+        {emailSuggestion && (
+          <p className="mt-1 text-xs text-neutral-500">
+            Did you mean{' '}
+            <button
+              type="button"
+              className="underline underline-offset-2 hover:text-neutral-200"
+              onClick={() => {
+                setEmail(emailSuggestion);
+                setEmailError('');
+              }}
+            >
+              {emailSuggestion}
+            </button>
+            ?
+          </p>
+        )}
         {emailError && <p className={errorClass}>{emailError}</p>}
         {generalError && <p className={errorClass}>{generalError}</p>}
         <p className="mt-2 text-[11px] text-neutral-600">No spam. Unsubscribe anytime.</p>
