@@ -104,6 +104,40 @@ const COMMON_TLDS = [
   'us',
 ] as const;
 
+const COMMON_DOMAIN_SUFFIXES = [
+  'co.uk',
+  'org.uk',
+  'ac.uk',
+  'co.jp',
+  'ne.jp',
+  'or.jp',
+  'co.kr',
+  'ne.kr',
+  'or.kr',
+  'com.au',
+  'net.au',
+  'org.au',
+  'co.nz',
+  'com.sg',
+  'com.hk',
+  'com.br',
+  'com.mx',
+  'com.tr',
+] as const;
+
+const REGIONAL_PROVIDER_TYPOS: Record<string, string> = {
+  gnail: 'gmail',
+  gmai: 'gmail',
+  gmial: 'gmail',
+  gmal: 'gmail',
+  gamil: 'gmail',
+  hotmial: 'hotmail',
+  hotmai: 'hotmail',
+  hotnail: 'hotmail',
+  outlok: 'outlook',
+  yaho: 'yahoo',
+};
+
 const EMAIL_TYPO_OVERRIDES: Record<string, string> = {
   'gnail.com': 'gmail.com',
   'gmai.com': 'gmail.com',
@@ -235,6 +269,12 @@ function getClosestDomain(domain: string) {
     return override;
   }
 
+  const regionalProviderSuggestion = getRegionalProviderSuggestion(domain);
+
+  if (regionalProviderSuggestion) {
+    return regionalProviderSuggestion;
+  }
+
   let closestDomain: string | null = null;
   let closestDistance = Number.POSITIVE_INFINITY;
 
@@ -248,6 +288,27 @@ function getClosestDomain(domain: string) {
   }
 
   return closestDistance <= 2 ? closestDomain : null;
+}
+
+function getRegionalProviderSuggestion(domain: string) {
+  const labels = domain.split('.');
+  const provider = labels[0];
+  const correctedProvider = REGIONAL_PROVIDER_TYPOS[provider];
+
+  if (!correctedProvider || labels.length < 2) {
+    return null;
+  }
+
+  const suffix = labels.slice(1).join('.');
+  const isKnownSuffix =
+    COMMON_TLDS.includes(suffix as (typeof COMMON_TLDS)[number]) ||
+    COMMON_DOMAIN_SUFFIXES.includes(suffix as (typeof COMMON_DOMAIN_SUFFIXES)[number]);
+
+  if (!isKnownSuffix) {
+    return null;
+  }
+
+  return `${correctedProvider}.${suffix}`;
 }
 
 export function getEmailSuggestion(value: string) {
@@ -274,6 +335,10 @@ export function isCommonEmailDomain(domain: string) {
   return COMMON_EMAIL_DOMAINS.includes(domain as (typeof COMMON_EMAIL_DOMAINS)[number]);
 }
 
+export function hasCommonDomainSuffix(domain: string) {
+  return COMMON_DOMAIN_SUFFIXES.some((suffix) => domain === suffix || domain.endsWith(`.${suffix}`));
+}
+
 export function isSuspiciousEmailDomain(domain: string) {
   if (isCommonEmailDomain(domain)) {
     return false;
@@ -284,6 +349,6 @@ export function isSuspiciousEmailDomain(domain: string) {
   return Boolean(
     EMAIL_TYPO_OVERRIDES[domain] ||
     getClosestDomain(domain) ||
-    (tld && !COMMON_TLDS.includes(tld as (typeof COMMON_TLDS)[number]))
+    (tld && !COMMON_TLDS.includes(tld as (typeof COMMON_TLDS)[number]) && !hasCommonDomainSuffix(domain))
   );
 }
