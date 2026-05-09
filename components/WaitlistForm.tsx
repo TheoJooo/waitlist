@@ -37,8 +37,8 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
     ? 'mt-2 border border-white/20 bg-black/45 px-3 py-2 text-sm text-neutral-200 shadow-[0_16px_40px_rgba(0,0,0,0.25)] backdrop-blur-md'
     : 'mt-2 border border-black/15 bg-white/80 px-3 py-2 text-sm text-neutral-700 shadow-[0_16px_40px_rgba(0,0,0,0.08)] backdrop-blur-md';
   const alertActionClassName = isHero
-    ? 'text-xs font-semibold uppercase tracking-[0.16em] text-white underline decoration-white/40 underline-offset-4 transition hover:decoration-white'
-    : 'text-xs font-semibold uppercase tracking-[0.16em] text-black underline decoration-black/30 underline-offset-4 transition hover:decoration-black';
+    ? 'inline-flex min-h-9 cursor-pointer items-center justify-center border border-white/15 px-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:border-white/45 hover:bg-white/10'
+    : 'inline-flex min-h-9 cursor-pointer items-center justify-center border border-black/10 px-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-black transition hover:border-black/30 hover:bg-black/5';
   const normalizedEmail = email.trim().toLowerCase();
 
   const trackFormStart = () => {
@@ -157,7 +157,7 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
         {emailSuggestion && (
           <div className={alertClassName}>
             <p>Did you mean {emailSuggestion}?</p>
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
               <button
                 type="button"
                 className={alertActionClassName}

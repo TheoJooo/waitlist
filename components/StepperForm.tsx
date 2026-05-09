@@ -118,7 +118,7 @@ export default function StepperForm({ location }: StepperFormProps) {
 
   const inputClass = 'h-11 w-full border border-white/35 bg-white/12 px-3 text-white caret-white outline-none transition placeholder:text-neutral-400 focus:border-white/60 focus:bg-white/18 text-sm';
   const alertClass = 'mt-2 border border-white/20 bg-black/45 px-3 py-2 text-xs text-neutral-300 shadow-[0_16px_40px_rgba(0,0,0,0.25)] backdrop-blur-md';
-  const alertActionClass = 'text-[11px] font-semibold uppercase tracking-[0.16em] text-white underline decoration-white/40 underline-offset-4 transition hover:decoration-white';
+  const alertActionClass = 'inline-flex min-h-9 cursor-pointer items-center justify-center border border-white/15 px-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-white transition hover:border-white/45 hover:bg-white/10';
 
   return (
     <div className="w-full max-w-sm">
@@ -153,7 +153,7 @@ export default function StepperForm({ location }: StepperFormProps) {
         {emailSuggestion && (
           <div className={alertClass}>
             <p>Did you mean {emailSuggestion}?</p>
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
               <button
                 type="button"
                 className={alertActionClass}
