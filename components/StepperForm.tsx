@@ -18,10 +18,12 @@ export default function StepperForm({ location }: StepperFormProps) {
   const [emailError, setEmailError] = useState('');
   const [generalError, setGeneralError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [forceSubmitEmail, setForceSubmitEmail] = useState('');
   const hasTrackedStart = useRef(false);
 
   useEffect(() => { router.prefetch('/waitlist/thank-you'); }, [router]);
   const emailSuggestion = getEmailSuggestion(email);
+  const normalizedEmail = email.trim().toLowerCase();
 
   const trackStart = () => {
     if (hasTrackedStart.current) return;
@@ -32,11 +34,21 @@ export default function StepperForm({ location }: StepperFormProps) {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitEmail = async (allowSuggestionOverride = false) => {
+    if (isSubmitting) return;
+
     setEmailError('');
     setGeneralError('');
     trackStart();
+
+    if (!email.trim()) {
+      setEmailError('Please enter your email address.');
+      capturePosthogEvent('waitlist_signup_failed', {
+        form_location: location,
+        error_type: 'validation',
+      });
+      return;
+    }
 
     if (!isValidEmail(email)) {
       setEmailError('Please enter a valid email address.');
@@ -47,7 +59,16 @@ export default function StepperForm({ location }: StepperFormProps) {
       return;
     }
 
-    const trimmedEmail = email.trim().toLowerCase();
+    if (emailSuggestion && !allowSuggestionOverride && forceSubmitEmail !== normalizedEmail) {
+      setEmailError('Please choose an option before continuing.');
+      capturePosthogEvent('waitlist_signup_failed', {
+        form_location: location,
+        error_type: 'suggestion_confirmation',
+      });
+      return;
+    }
+
+    const trimmedEmail = normalizedEmail;
     const utmProperties = getUtmFromWindow();
     const signupTiming = getWaitlistSignupTiming();
 
@@ -90,18 +111,27 @@ export default function StepperForm({ location }: StepperFormProps) {
     });
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void submitEmail();
+  };
+
   const inputClass = 'h-11 w-full border border-white/35 bg-white/12 px-3 text-white caret-white outline-none transition placeholder:text-neutral-400 focus:border-white/60 focus:bg-white/18 text-sm';
-  const errorClass = 'mt-1 text-xs text-red-400';
+  const alertClass = 'mt-2 border border-white/20 bg-black/45 px-3 py-2 text-xs text-neutral-300 shadow-[0_16px_40px_rgba(0,0,0,0.25)] backdrop-blur-md';
+  const alertActionClass = 'text-[11px] font-semibold uppercase tracking-[0.16em] text-white underline decoration-white/40 underline-offset-4 transition hover:decoration-white';
 
   return (
     <div className="w-full max-w-sm">
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <div className="flex items-center gap-2">
           <div className="flex-1 min-w-0">
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setForceSubmitEmail('');
+              }}
               onFocus={trackStart}
               placeholder="Your email"
               autoComplete="email"
@@ -121,23 +151,36 @@ export default function StepperForm({ location }: StepperFormProps) {
           </StarBorder>
         </div>
         {emailSuggestion && (
-          <p className="mt-1 text-xs text-neutral-500">
-            Did you mean{' '}
-            <button
-              type="button"
-              className="underline underline-offset-2 hover:text-neutral-200"
-              onClick={() => {
-                setEmail(emailSuggestion);
-                setEmailError('');
-              }}
-            >
-              {emailSuggestion}
-            </button>
-            ?
-          </p>
+          <div className={alertClass}>
+            <p>Did you mean {emailSuggestion}?</p>
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <button
+                type="button"
+                className={alertActionClass}
+                onClick={() => {
+                  setEmail(emailSuggestion);
+                  setEmailError('');
+                  setForceSubmitEmail('');
+                }}
+              >
+                Use suggestion
+              </button>
+              <button
+                type="button"
+                className={alertActionClass}
+                onClick={() => {
+                  setForceSubmitEmail(normalizedEmail);
+                  setEmailError('');
+                  void submitEmail(true);
+                }}
+              >
+                Submit anyway
+              </button>
+            </div>
+          </div>
         )}
-        {emailError && <p className={errorClass}>{emailError}</p>}
-        {generalError && <p className={errorClass}>{generalError}</p>}
+        {emailError && <p className={alertClass}>{emailError}</p>}
+        {generalError && <p className={alertClass}>{generalError}</p>}
         <p className="mt-2 text-[11px] text-neutral-600">No spam. Unsubscribe anytime.</p>
       </form>
     </div>

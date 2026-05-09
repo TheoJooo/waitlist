@@ -20,6 +20,7 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
   const [emailError, setEmailError] = useState('');
   const [generalError, setGeneralError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [forceSubmitEmail, setForceSubmitEmail] = useState('');
   const hasTrackedStart = useRef(false);
 
   useEffect(() => { router.prefetch('/waitlist/thank-you'); }, [router]);
@@ -32,6 +33,13 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
   const errorClassName = isHero ? 'text-sm text-red-300' : 'text-sm text-red-700';
   const buttonEffectColor = isHero ? 'rgba(255, 255, 255, 0.95)' : 'rgba(17, 17, 17, 0.75)';
   const ctaLabel = buttonLabel ?? 'Get Early Access';
+  const alertClassName = isHero
+    ? 'mt-2 border border-white/20 bg-black/45 px-3 py-2 text-sm text-neutral-200 shadow-[0_16px_40px_rgba(0,0,0,0.25)] backdrop-blur-md'
+    : 'mt-2 border border-black/15 bg-white/80 px-3 py-2 text-sm text-neutral-700 shadow-[0_16px_40px_rgba(0,0,0,0.08)] backdrop-blur-md';
+  const alertActionClassName = isHero
+    ? 'text-xs font-semibold uppercase tracking-[0.16em] text-white underline decoration-white/40 underline-offset-4 transition hover:decoration-white'
+    : 'text-xs font-semibold uppercase tracking-[0.16em] text-black underline decoration-black/30 underline-offset-4 transition hover:decoration-black';
+  const normalizedEmail = email.trim().toLowerCase();
 
   const trackFormStart = () => {
     if (hasTrackedStart.current) return;
@@ -42,11 +50,21 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
     });
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const submitEmail = async (allowSuggestionOverride = false) => {
+    if (isSubmitting) return;
+
     setEmailError('');
     setGeneralError('');
     trackFormStart();
+
+    if (!email.trim()) {
+      setEmailError('Please enter your email address.');
+      capturePosthogEvent('waitlist_signup_failed', {
+        form_location: location,
+        error_type: 'validation',
+      });
+      return;
+    }
 
     if (!isValidEmail(email)) {
       setEmailError('Please enter a valid email address.');
@@ -57,7 +75,16 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
       return;
     }
 
-    const trimmedEmail = email.trim().toLowerCase();
+    if (emailSuggestion && !allowSuggestionOverride && forceSubmitEmail !== normalizedEmail) {
+      setEmailError('Please choose an option before continuing.');
+      capturePosthogEvent('waitlist_signup_failed', {
+        form_location: location,
+        error_type: 'suggestion_confirmation',
+      });
+      return;
+    }
+
+    const trimmedEmail = normalizedEmail;
     const utmProperties = getUtmFromWindow();
     const signupTiming = getWaitlistSignupTiming();
 
@@ -100,8 +127,13 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
     });
   };
 
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void submitEmail();
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-2">
+    <form onSubmit={handleSubmit} className="space-y-2" noValidate>
       {title ? (
         <h3 className={isHero ? 'text-xl font-semibold tracking-tight text-neutral-100' : 'text-xl font-semibold tracking-tight'}>
           {title}
@@ -113,29 +145,45 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
           type="email"
           value={email}
           onFocus={trackFormStart}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setForceSubmitEmail('');
+          }}
           autoComplete="email"
           placeholder="Your email"
           required
           className={inputClassName}
         />
         {emailSuggestion && (
-          <p className={isHero ? 'mt-1 text-sm text-neutral-300' : 'mt-1 text-sm text-neutral-700'}>
-            Did you mean{' '}
-            <button
-              type="button"
-              className={isHero ? 'underline decoration-white/50 underline-offset-2 hover:text-white' : 'underline underline-offset-2 hover:text-black'}
-              onClick={() => {
-                setEmail(emailSuggestion);
-                setEmailError('');
-              }}
-            >
-              {emailSuggestion}
-            </button>
-            ?
-          </p>
+          <div className={alertClassName}>
+            <p>Did you mean {emailSuggestion}?</p>
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <button
+                type="button"
+                className={alertActionClassName}
+                onClick={() => {
+                  setEmail(emailSuggestion);
+                  setEmailError('');
+                  setForceSubmitEmail('');
+                }}
+              >
+                Use suggestion
+              </button>
+              <button
+                type="button"
+                className={alertActionClassName}
+                onClick={() => {
+                  setForceSubmitEmail(normalizedEmail);
+                  setEmailError('');
+                  void submitEmail(true);
+                }}
+              >
+                Submit anyway
+              </button>
+            </div>
+          </div>
         )}
-        {emailError && <p className={`mt-1 ${errorClassName}`}>{emailError}</p>}
+        {emailError && <p className={alertClassName}>{emailError}</p>}
       </div>
 
       <StarBorder
@@ -154,7 +202,7 @@ export default function WaitlistForm({ location, title, buttonLabel }: WaitlistF
         No spam. Unsubscribe anytime.
       </p>
 
-      {generalError && <p className={errorClassName}>{generalError}</p>}
+      {generalError && <p className={alertClassName}>{generalError}</p>}
     </form>
   );
 }
