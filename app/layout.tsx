@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   title: 'Various Archives',
   description:
     'A curated destination for luxury vintage and archival fashion, with early access available via the waitlist.',
+  verification: {
+    google: 'DvM6lVDMRZxZvq0IK4PAJxxLoLI97-sWoJhoaCSbFdg',
+  },
 };
 
 export default function RootLayout({
