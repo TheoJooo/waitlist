@@ -5,7 +5,7 @@ import AnalyticsManager from '@/components/AnalyticsManager';
 import './globals.css';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://various-archives.com'),
+  metadataBase: new URL('https://www.various-archives.com'),
   title: 'Various Archives',
   description:
     'A curated destination for luxury vintage and archival fashion, with early access available via the waitlist.',
